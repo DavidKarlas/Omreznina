@@ -1,0 +1,9 @@
+﻿<div class="tooltip-wrapper2">
+    <div class="tooltip-content2">@ChildContent</div>
+    @Text
+</div>
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string Text { get; set; }
+} 

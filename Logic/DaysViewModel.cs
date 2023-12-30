@@ -1,0 +1,150 @@
+﻿using LiveChartsCore.SkiaSharpView;
+using LiveChartsCore;
+using Omreznina.Client.Logic;
+using LiveChartsCore.SkiaSharpView.Painting;
+using SkiaSharp;
+using System.Collections.ObjectModel;
+using LiveChartsCore.Measure;
+using Omreznina.Client.Pages;
+
+namespace Omreznina.Logic
+{
+    public class DaysViewModel
+    {
+        private readonly ObservableCollection<string> days = new();
+        private readonly ObservableCollection<decimal> agreedPowerPrice = new();
+        private readonly ObservableCollection<decimal> energyPrice = new();
+        private readonly ObservableCollection<decimal> overdraftPrice = new();
+        private readonly ObservableCollection<decimal> zeros = new();
+        private readonly ObservableCollection<decimal> selected = new();
+
+        public int DataLabelsTotalSize { get; set; } = 12;
+        public int DataLabelsSize { get; set; } = 12;
+        private readonly SolidColorPaint DataLabelPaint = "#e5e5e5".ToPaint();
+        private readonly SolidColorPaint TotalDataLabelPaint = "#303030".ToPaint();
+
+        public ISeries[] Series { get; }
+        public Axis[] XAxis { get; }
+        public Axis[] YAxis { get; }
+
+        public DaysViewModel()
+        {
+            Series = [
+               new ColumnSeries<decimal>
+               {
+                    IsHoverable = false, // disables the series from the tooltips // mark
+                    Values = selected,
+                    Stroke = null,
+            Fill =new SolidColorPaint( "#2196f3".ToPaint().Color.WithAlpha(170),0),
+                    IgnoresBarPosition = true,
+                    MaxBarWidth=int.MaxValue,
+                    IsVisibleAtLegend = false
+                },
+                CreateStackedColumn("Dogovorjeno", 1, UIHelper.AgreedPowerColor, agreedPowerPrice),
+                        CreateStackedColumn("Energija", 1, UIHelper.EnergyTransferColor, energyPrice),
+                        CreateStackedColumn("Prekoračitev", 1, UIHelper.OverdraftColor, overdraftPrice),
+                        new StackedColumnSeries<decimal>
+                        {
+                            IsVisibleAtLegend = false,
+                            Name="Suma",
+                            Values = zeros,
+                            Stroke = null,
+                            StackGroup = 1,
+                            DataLabelsSize=DataLabelsTotalSize,
+                            DataLabelsFormatter=point => ((decimal)point.StackedValue.Total).ToEuro(),
+                            DataLabelsPaint =TotalDataLabelPaint,
+                            DataLabelsPosition = DataLabelsPosition.Top,
+                            YToolTipLabelFormatter = point => ((decimal)point.StackedValue.Total).ToEuro(),
+                            MaxBarWidth = 55
+                        }
+            ];
+            XAxis = [new Axis {
+                Labels = days
+            }];
+            YAxis = [new Axis {
+                MinLimit = 0,
+                Labeler = value => ((decimal)value).ToEuroPreferFullNumber()
+            }];
+        }
+
+        private StackedColumnSeries<decimal> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<decimal> values)
+        {
+            return new StackedColumnSeries<decimal> {
+                Name = name,
+                Values = values,
+                Stroke = null,
+                StackGroup = stackGroup,
+                DataLabelsSize = 11,
+                DataLabelsFormatter = point => {
+                    if (YAxis[0].VisibleDataBounds.Max == 0)
+                        return "";
+                    if (((double)point.Model / YAxis[0].VisibleDataBounds.Max) < 0.03)
+                        return "";
+                    return point.Model.ToEuro();
+                },
+                DataLabelsPaint = new SolidColorPaint(new SKColor(240, 240, 240)),
+                DataLabelsPosition = DataLabelsPosition.Middle,
+                YToolTipLabelFormatter = point => point.Model.ToEuro(),
+                Fill = color
+            };
+        }
+
+        public void SelectDay(int index)
+        {
+            foreach (var day in previouslySelectedMonth.DailyReports)
+            {
+                if(index == day.Value.Index)
+                {
+                    SelectedDay = day.Value;
+                    return;
+                }
+            }
+        }
+
+        private DayReport? selectedDay = null;
+        private MonthlyReport previouslySelectedMonth;
+        public DayReport SelectedDay
+        {
+            get
+            {
+                return selectedDay!;
+            }
+            set
+            {
+                var newArray = new decimal[days.Count];
+                selectedDay = value;
+                newArray[selectedDay.Index] = (decimal)YAxis[0].MaxLimit;
+                selected.SyncCollections(newArray);
+            }
+        }
+
+        public void Update(MonthlyReport monthReport)
+        {
+            var allDays = monthReport.DailyReports.OrderBy(d => d.Value.Index).ToArray();
+            days.SyncCollections(allDays.Select(d => d.Key.Day.ToString()).ToArray());
+            var maxY = (double)monthReport.DailyReports.Max(x => x.Value.EnergyPrice + x.Value.OverdraftPowerPrice + x.Value.AgreedPowerPrice);
+            var roundedMaxY = Math.Round(maxY * 1.25);
+            if (YAxis[0].MaxLimit != roundedMaxY)
+            {
+                YAxis[0].MaxLimit = roundedMaxY;
+            }
+            if (monthReport.Month != previouslySelectedMonth?.Month || selectedDay == null || selectedDay.Index >= days.Count)
+            {
+                previouslySelectedMonth = monthReport;
+                SelectedDay = monthReport.DailyReports
+                    .OrderByDescending(d => d.Value.OverdraftPowerPrice)
+                    .ThenByDescending(d => d.Value.EnergyPrice + d.Value.AgreedPowerPrice)
+                    .ThenBy(d => d.Value.Index)
+                    .FirstOrDefault(d => d.Value.OverdraftPowerPrice > 0).Value;
+            }
+            else
+            {
+                SelectedDay = monthReport.DailyReports[SelectedDay.Day];
+            }
+            agreedPowerPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.AgreedPowerPrice).ToArray());
+            energyPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.EnergyPrice).ToArray());
+            overdraftPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.OverdraftPowerPrice).ToArray());
+            zeros.SyncCollections(new decimal[days.Count]);
+        }
+    }
+}

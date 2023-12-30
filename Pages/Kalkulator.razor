@@ -1,0 +1,242 @@
+﻿@page "/Kalkulator"
+@using Blazored.Toast
+@using Blazored.Toast.Services
+@using LiveChartsCore.Drawing
+@using LiveChartsCore.SkiaSharpView.Blazor
+@using Omreznina.Client.Logic
+@using Omreznina.Logic
+@using Omreznina.Client.Pages
+@using Omreznina.Shared
+@using System.Diagnostics
+@implements IDisposable;
+@inject IToastService toastService
+
+<div class="page">
+    <main>
+        <div class="top-row px-4">
+            <EditForm style="margin-right:auto;" EditContext="_editContext2">
+                <Tooltip3>
+                    <Text><b>Moči:</b></Text>
+                    <ChildContent>
+                        <h3>Dogovorjene moči po blokih</h3>
+                        <span>
+                            Dogovorjene moči po blokih so kjučna stvar pri reformi obračuna elektrike. Saj omogočajo vsakemu odjemalcu da določi koliko bo obremenjeval omrežje in temu primerno, koliko bo plačal. Prekoračitve dogovorjene moči se kaznuje s presežki.
+                        </span>
+                    </ChildContent>
+                </Tooltip3>
+
+                <Tooltip2 Text=@($"Blok 1({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 0).ToEuro()}/kW)")>
+                    <h3>Blok 1 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions.IncludeVAT, 0).ToEuro(4)/kWh</h3>
+                    <span>
+                        Blok 1 je v uporabi le od novembra do februarja in sicer med 7:00 in 14:00 ter 16:00 in 20:00.
+                        To je daleč najbolj obremenjen in najdražji blok s ceno @BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 0).ToEuro() na kW.
+                        To pomeni, da za dogovorjeno moč @ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0].ToKW() bo potrebno plačati v mesecih od novembra do februarja @((BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 0) * ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]).ToEuro()) ne glede na količino porabljene elektrike.
+                    </span>
+                </Tooltip2>
+                <InputNumber step="@Power1StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
+                <Tooltip2 Text=@($"Blok 2({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 1).ToEuro()}/kW)")>
+                    <h3>Blok 2 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions.IncludeVAT, 1).ToEuro(4)/kWh</h3>
+                    <span>
+                        Blok bla bla.
+                    </span>
+                </Tooltip2>
+                <InputNumber step="@Power2StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
+                <Tooltip2 Text=@($"Blok 3({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 2).ToEuro()}/kW)")>
+                    <h3>Blok 3 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions.IncludeVAT, 2).ToEuro(4)/kWh</h3>
+                    <span>
+                        Blok bla bla.
+                    </span>
+                </Tooltip2>
+                <InputNumber step="@Power3StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
+                <Tooltip2 Text=@($"Blok 4({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 3).ToEuro()}/kW)")>
+                    <h3>Blok 4 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions.IncludeVAT, 3).ToEuro(4)/kWh</h3>
+                    <span>
+                        Blok bla bla.
+                    </span>
+                </Tooltip2>
+                <InputNumber step="@Power4StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
+                <Tooltip2 Text=@($"Blok 5({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 4).ToEuro()}/kW)")>
+                    <h3>Blok 5 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions.IncludeVAT, 4).ToEuro(4)/kWh</h3>
+                    <span>
+                        Blok bla bla.
+                    </span>
+                </Tooltip2>
+                <InputNumber step="@Power5StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
+            </EditForm>
+
+            <a href="/About" type="button" class="btn btn-primary  m-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-info-circle-fill" viewBox="0 0 16 16">
+                    <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2" />
+                </svg>
+            </a>
+            <a href="https://github.com/DavidKarlas/Omreznina" type="button" class="btn btn-primary  m-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
+                    <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8" />
+                </svg>
+            </a>
+        </div>
+        <article class="content px-4">
+            <EditForm EditContext="_editContext">
+                <InputFile id="csvFile" OnChange="@LoadFiles" hidden multiple />
+                <fieldset class="border p-2">
+                    <legend class="float-none w-auto">Nastavitve</legend>
+                    <button class="btn m-1 btn-primary" onclick="document.getElementById('csvFile').click()">Odpri .csv datoteko iz mojelektro.si</button>
+                    <span>Trenutna obračunska moč:</span>
+                    <InputSelect @bind-Value="ViewModel.CalculationOptions.BreakersText">
+                        @foreach (var (text, _, _, _) in CalculationOptions.AllBreakersOptions)
+                        {
+                            <option value="@text">@text</option>
+                        }
+                    </InputSelect>
+                    <span>Trenutni način obračuna:</span>
+                    <InputSelect @bind-Value="ViewModel.CalculationOptions.TwoTariffSystem">
+                        <option value="true">MT/VT</option>
+                        <option value="false">ET</option>
+                    </InputSelect>
+                    <span>Star Cenik:</span>
+                    <InputSelect @bind-Value="ViewModel.CalculationOptions.OldPricelist">
+                        @foreach (var text in BlockPrices.FixedPriceListPerKW.Keys)
+                        {
+                            <option value="@text">@text</option>
+                        }
+                    </InputSelect>
+                    <span style="white-space:nowrap;">Vključi DDV:</span>
+                    <InputCheckbox @bind-Value="ViewModel.CalculationOptions.IncludeVAT" />
+                    <span style="white-space:nowrap;">Net-Metering:</span>
+                    <InputCheckbox @bind-Value="ViewModel.CalculationOptions.NetMetering" />
+                </fieldset>
+            </EditForm>
+            <div class="container-fluid" style="height:150px;">
+                <CartesianChart Series="ViewModel.AllCategoriesViewModel.Series"
+                                Title="ViewModel.AllCategoriesViewModel.Title"
+                                Tooltip="MonthsTooltip"
+                                LegendTextSize="12"
+                                XAxes="ViewModel.AllCategoriesViewModel.XAxis"
+                                YAxes="ViewModel.AllCategoriesViewModel.YAxis"
+                                LegendPosition=@LiveChartsCore.Measure.LegendPosition.Bottom />
+            </div>
+            <div class="container-fluid" style="height:400px;">
+                <CartesianChart @ref=monthsChart
+                                Tooltip="MonthsTooltip"
+                                LegendTextSize="13"
+                                Title="ViewModel.MonthsViewModel.Title"
+                                Series="ViewModel.MonthsViewModel.Series"
+                                XAxes="ViewModel.MonthsViewModel.XAxis"
+                                YAxes="ViewModel.MonthsViewModel.YAxis"
+                                OnPointerDownCallback="OnMonthlyPointerDown"
+                                LegendPosition=@LiveChartsCore.Measure.LegendPosition.Bottom />
+            </div>
+            <div style="height:300px" hidden="@(!ViewModel.DaysViewModel.IsVisible)">
+                <CartesianChart Series="ViewModel.DaysViewModel.Series"
+                                @ref=dailyChart
+                                Title="ViewModel.DaysViewModel.Title"
+                                OnPointerDownCallback="OnDailyPointerDown"
+                                XAxes="ViewModel.DaysViewModel.XAxis"
+                                YAxes="ViewModel.DaysViewModel.YAxis">
+                </CartesianChart>
+            </div>
+
+            <div style="height:300px" hidden="@(!ViewModel.FifteenMinutesViewModel.IsVisible)">
+                <CartesianChart Series="ViewModel.FifteenMinutesViewModel.Series"
+                                Title="ViewModel.FifteenMinutesViewModel.Title"
+                                XAxes="ViewModel.FifteenMinutesViewModel.XAxis"
+                                VisualElements="ViewModel.FifteenMinutesViewModel.VisualElements"
+                                YAxes="ViewModel.FifteenMinutesViewModel.YAxis">
+                </CartesianChart>
+            </div>
+        </article>
+    </main>
+</div>
+
+@code {
+    private MonthsTooltip MonthsTooltip { get; set; } = new();
+    public ViewModel ViewModel { get; set; } = new();
+    private EditContext _editContext;
+    private EditContext _editContext2;
+
+    private decimal GetBlockStepSize(int block)
+    {
+        var currentPower = ViewModel.CalculationOptions.AgreedMaxPowerBlocks[block];
+        if (currentPower > 20 && currentPower % 1 == 0)
+        {
+            return 1M;
+        }
+        if (currentPower > 5 && currentPower % 0.5M == 0)
+        {
+            return 0.5M;
+        }
+        return 0.1M;
+    }
+
+    private decimal Power1StepSize => GetBlockStepSize(0);
+    private decimal Power2StepSize => GetBlockStepSize(1);
+    private decimal Power3StepSize => GetBlockStepSize(2);
+    private decimal Power4StepSize => GetBlockStepSize(3);
+    private decimal Power5StepSize => GetBlockStepSize(4);
+
+    CartesianChart monthsChart;
+    CartesianChart dailyChart;
+
+    public Kalkulator()
+    {
+        _editContext = new EditContext(ViewModel.CalculationOptions);
+        _editContext2 = new EditContext(ViewModel.CalculationOptions);
+        ViewModel.CalculationOptions.AgreedMaxPowerBlocks.ErrorMessage += AgreedMaxBlocksMessage;
+    }
+
+    private void AgreedMaxBlocksMessage(string message)
+    {
+        toastService.ClearAll();
+        toastService.ShowWarning(message);
+    }
+
+    public void OnMonthlyPointerDown(PointerEventArgs e)
+    {
+        var p = new LvcPoint(e.OffsetX, e.OffsetY);
+        var point = monthsChart.GetPointsAt(p).FirstOrDefault();
+        if (point != null)
+            ViewModel.MonthsViewModel.SelectMonth = point.Index;
+        ViewModel.UpdateGraphs(true);
+    }
+
+    public void OnDailyPointerDown(PointerEventArgs e)
+    {
+        var p = new LvcPoint(e.OffsetX, e.OffsetY);
+        var point = dailyChart.GetPointsAt(p).FirstOrDefault();
+        if (point != null)
+            ViewModel.DaysViewModel.SelectDay(point.Index);
+        ViewModel.UpdateGraphs(true);
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        _editContext.OnFieldChanged += OnFormUpdated;
+        _editContext2.OnFieldChanged += OnFormUpdated;
+    }
+
+    public void Dispose()
+    {
+        _editContext.OnFieldChanged -= OnFormUpdated;
+        _editContext2.OnFieldChanged -= OnFormUpdated;
+    }
+
+    private void OnFormUpdated(Object sender, FieldChangedEventArgs args)
+    {
+        ViewModel.UpdateGraphs();
+    }
+
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var memoryStreams = new List<Stream>();
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var ms = new MemoryStream();
+            await file.OpenReadStream(30 * 1024 * 1024).CopyToAsync(ms);
+            memoryStreams.Add(ms);
+            ms.Position = 0;
+        }
+        await ViewModel.LoadCSVs(memoryStreams);
+    }
+}

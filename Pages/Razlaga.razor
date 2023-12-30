@@ -1,0 +1,110 @@
+﻿@page "/Razlaga"
+<div class="m-3">
+    <h3>Razlaga</h3>
+
+    <h3>Razlika med omrežnino in električno energijo</h3>
+    <p>
+        V Sloveniji imamo 6 javnih podjetij, ki skrbijo za elektro omrežje.<br />
+        <a href="https://www.eles.si/">ELES</a> skrbi za <a href="https://www.eles.si/elementi-prenosnega-omrezja">prenosno omrežje</a>, to so tisti ogromni daljnovodi, ki prenašajo velike količine elektrike iz elektraren do razdelilnih transformatorskih postaj, kot so RTP Beričevo, RTP Podlog, RTP Maribor, RTP Cirkovce, RTP Divača, RTP Okroglo in RTP Krško.
+        <br />
+        Imamo pa tudi 5 distribucijskih podjetij, ki skrbijo za distribucijsko omrežje in sicer Elektro Celje d. d., Elektro Gorenjska d. d., Elektro Ljubljana d. d., Elektro Maribor d. d. in Elektro Primorska d. d., te družbe prevzamejo elektriko iz prenosnega omrežja in ga distribuirajo do končnih uporabnikov. Te družbe skrbijo za napeljavjo elektrike do naselji(srednje napetostno omrežje 20kV) in po naseljih(nizko napetostno omrežje 220V) ter merjenje porabe na merilnih mestih(elektro omarice).
+        Ta podjetja in ELES se financirajo iz omrežnine, s 1.7.2024 se spreminja način obračuna omrežnine.
+        <br />
+        Poleg tega imamo še dobavitelje električne energije, npr. Gen-i, Petrol, SunContract..., ki skrbijo za nakup električne energije na trgu in prodajo električne energije končnim uporabnikom.
+        <br />
+        Ta kalkulator računa le spremembe omrežnine in ne upošteva cene električne energije, ki je odvisna od pogodbe z izbranim dobaviteljem električne energije.
+    </p>
+    <h3>O reformi</h3>
+    <p>
+        Ko se je sprejel trenutni način obračunavanja omrežnin se je večina gospodinjstev ogrevala na fosila goriva ali drva, kuhalo se je na plin in ni bilo električnih avtomobilov.
+        Večina gospodinjstev ni presegla 4 kW(kilovatov) moči, hiše so vseeno dobile napredni 3-fazni priklop in 20A varovalke, kar omogoča 13,8 kW moči, kar je trikrat več od takratne tipične največje porabe.
+        Nekajkrat na leto se je uporabila naprava, ki je porabila več kot 4 kW moči, recimo krožna žaga za rezanje drv ali kaj podobnega.
+        Pri takšni uporabi omrežja je bila gradnja in vzdrževanja omrežja relativno poceni saj je lahko ena transformatorksa postaja z močjo 300kW pokrivala 100 gospodinjstev, saj se ni nikoli zgodilo, da bi vseh 100 gospodinjstvev porabilo 3kW ali več.
+        Toda s časom so gospodinjstva začela prehajati na indukcijo za kuhanje(2kW), toplotne črpalke(1-6kW) in električne avtomobile(2-11kW).
+        Kar pomeni, da bo potrebno ta 300kW transformator nadgraditi v 600kW ali več in to bo potrebno financirati skozi omrežnino, poleg večanja moči transformatorskih postaj in kablov, obstaja še drug mogoč ukrep.
+        Prilagajanje porabe uporabnikov, če z cenovno politiko spodbudimo uporabnike, da prestavijo uporabo omrežja na dele dneva, ko je omrežje najmanj obremenjeno, lahko zmanjšamo potrebo po nadgradnji omrežja in posledično stroške.
+        Zato je prišlo do te reforme, ki poskuša pošteno razporediti stroške nadgradnje omrežja in razbremeniti najbolj obremenjena obdobja.
+    </p>
+    <h3>Trenutni način računanja omrežnine</h3>
+    Imamo dva dela omrežnine fiksni del, ki je odvisen od obračunske moči ali bolj preprosto povedano varovalk, in glede na porabljeno energijo.
+    <br />
+    Fiksni del se izračuna tako, da se obračunsko moč pomnoženo z 0,97112 €, obračunske moči so vidne v spodnji tabeli:
+    <table>
+        <tr>
+            <th>Obračunska moč</th>
+            <th>Strošek na mesec z DDV</th>
+        </tr>
+        <tr><td>3kW (1x16 A)</td><td>2.91 €</td></tr>
+        <tr><td>3kW (1x20 A)</td><td>2.91 €</td></tr>
+        <tr><td>6kW (1x25 A)</td><td>5.83 €</td></tr>
+        <tr><td>7kW (1x32 A)</td><td>6.8 €</td></tr>
+        <tr><td>7kW (1x35 A)</td><td>6.8 €</td></tr>
+        <tr><td>7kW (3x16 A)</td><td>6.8 €</td></tr>
+        <tr><td>7kW (3x20 A)</td><td>6.8 €</td></tr>
+        <tr><td>10kW (3x25 A)</td><td>9.71 €</td></tr>
+        <tr><td>22kW (3x32 A)</td><td>21.36 €</td></tr>
+        <tr><td>24kW (3x35 A)</td><td>23.31 €</td></tr>
+        <tr><td>28kW (3x40 A)</td><td>27.19 €</td></tr>
+        <tr><td>35kW (3x50 A)</td><td>33.99 €</td></tr>
+        <tr><td>43kW (3x63 A)</td><td>41.76 €</td></tr>
+    </table>
+    Ter drugi del, ki se računa glede na prejeto energijo iz omrežja, tukaj sta dva možna načina računanja, dvotarifini, ki uporablja oznako MT/VT(mala tarifa/velika tarifa) ali pa enotarifno računanje, ki uporablja oznako ET.
+    <br />
+    Cene na prevzeto energijo iz omrežja so sledeče:
+    <table class="offset-4 col-4">
+        <tr>
+            <th>Tarifa</th>
+            <th>Strošek na kWh</th>
+        </tr>
+        <tr><td>Visoka Tarifa</td><td>0,04401 €</td></tr>
+        <tr><td>Mala Tarifa</td><td>0,03404 €</td></tr>
+        <tr><td>Enota Tarifa</td><td>0,04066 €</td></tr>
+    </table>
+    <h3>Način računanja omrežnine od 1.7.2024</h3>
+    S 1.7.2024 prehajamo na sistem 5 blokov, kjer cena ne bo več sestavljena samo iz dveh delov, ki je bil odvisen od energija in obračunke moči, ampak bodo trije deli:
+    <br />
+    <b>Energija</b>, ki bo sedaj pol cenejša
+    <br />
+    <b>Fiksni del</b>, ki bo izračunan na podlagi dogovorjenih moči blokov
+    <br />
+    <b>Presežki</b>, ki se zaračuna vsakič, ko uporabnik preseže dogovorjeno moč bloka
+    <h4>5 blokov</h4>
+    <b5>Kako vemo kdaj je kateri blok?</b5>
+    Znotraj posameznega dneva so vedno točno trije bloki, najcenejši je tako kot sedaj od 22:00 do 06:00. Obdobje višje tarife, kot ga poznamo danes od 06:00 do 22:00 se bo razbil na dva dela dražji del, ki bo od 07:00 pa do 14:00 in pa od 16:00 do 20:00. Kar pomeni da dobimo znotraj enega dneva novo obdobje in sicer srednje drag del od 06:00 do 07:00, od 14:00 do 16:00 in 20:00 do 22:00.
+    Sedaj ko vemo kako pridemo do teh treh obdobij znotraj posameznega dneva poglejmo kako se to preslika na 5 blokov.
+    Najdražji del dneva se preslika v Blok 1, sredji se preslika v Blok 2 in najcenejši del dneva se preslika v Blok 3.
+    Če je dela prost dan, se pravi vikend ali nedelaven praznik, se vsakemu bloku številka poveča za ena.
+    Če je dan v mesecu od marca do oktobra se številka bloka poveča še za ena.
+    To pomeni, da na zimski delovni dan bomo imeli Bloke 1, 2 in 3. Na dela prost dan pa Bloke 2, 3 in 4.
+    Če pa je poletje, bomo imeli na delovni dan Bloke 2, 3 in 4. Na dela prost dan pa Bloke 3, 4 in 5.
+    <h5>Cene blokov</h5>
+    Bloki imajo zelo različne cene, kot je razvidno iz spodnje tabele:
+    <table class="offset-4 col-4">
+        <tr>
+            <th>Ime bloka</th>
+            <th>Cena na kW na mesec z DDV</th>
+            <th>Cena na kWh prevzete energije z DDV</th>
+        </tr>
+        <tr><td>Blok 1</td><td>4,41 €</td><td>0.01958 €</td></tr>
+        <tr><td>Blok 2</td><td>1,08 €</td><td>0.01844 €</td></tr>
+        <tr><td>Blok 3</td><td>0,23 €</td><td>0.01837 €</td></tr>
+        <tr><td>Blok 4</td><td>0,02 €</td><td>0.01838 €</td></tr>
+        <tr><td>Blok 5</td><td>0,00 €</td><td>0.01847 €</td></tr>
+    </table>
+    <h5>Izračun fiksnega dela omrežnine</h5>
+    V zimski sezoni nimamo nikoli Bloka 5 in v poletni sezoni nimamo Bloka 1, to je pomembno za izračun fiksnega dela omrežnine, saj najdražjega Bloka 1 ni treba plačevati v mesecih od marca do oktobra.
+    Poglejmo primer izračuna fiksnega dela omrežnine na podlagi dogovorjene moči blokov. Če se recimo dogovorimo za 2,5 kW moči v Bloku 1, 3 kW moči v Bloku 2 ter 3,5 kW moči v Blokih 3, 4 in 5.
+    Za mesec December bo fiksen del omrežnine 2,5 kW * 4,41 € + 3 kW * 1,08 € + 3,5 kW * 0,23 € + 3,5 kW * 0,02€ = 15,12 €.
+    Za mesec Junij bo fiksen del omrežnine 3 kW * 1,08 € + 3,5 kW * 0,23 € + 3,5 kW * 0,02 € + 3,5 kW * 0,00 € = 4,10 €.
+    <h5>Izračun energije</h5>
+    Omrežnina glede na porabo energije bo sedaj pol cenejša, saj se bo več denarja pobralo z fiksnim delom na podlagi dogvorjenih moči blokov.
+    <h5>Izračun presežkov</h5>
+    Presežki se zaračunajo vsakič, ko uporabnik preseže dogovorjeno moč bloka, če si izberete/dogovorite za 4 kW moči v Bloku 1 potem pa uporabite 5 kW moči v Bloku 1 za 15 minut, se vam zaračuna 1 kW presežka, ki je 4,41 €, kot je cena kW na mesec.
+    Enačba izračuna se nekoliko komplicira, če je presežena moč več kot 1 kW saj gre exponentno, toda se kasneje tudi sume vseh presežkov da pod koren. Namen tako komplicirane enačbe je se naredi količinski popust za večkratne ponovitve presežkov.
+    Točen način izračuna si lahko preberete v <a href="http://pisrs.si/Pis.web/pregledPredpisa?id=AKT_1266">aktu o metodologiji za obračunavanje omrežnine za elektrooperaterje.</a>
+    <br />
+</div>
+
+@code {
+
+}

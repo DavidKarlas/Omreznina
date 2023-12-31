@@ -38,7 +38,7 @@ namespace Omreznina.Logic
                 Labeler = value => ((decimal)value).ToEuroPreferFullNumber()
             }];
             Series = [
-                    CreateStackedColumn("Star obračun: Obračunska moč", 0, UIHelper.OldFixedColor, oldFixed),
+                    CreateStackedColumn("Star obračun: Moč", 0, UIHelper.OldFixedColor, oldFixed),
                     CreateStackedColumn("Star obračun: Energija", 0, UIHelper.OldEnergyColor, oldEnergy),
                     new StackedColumnSeries<decimal>
                     {

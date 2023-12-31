@@ -93,7 +93,7 @@ namespace Omreznina.Logic
         {
             foreach (var day in previouslySelectedMonth.DailyReports)
             {
-                if(index == day.Value.Index)
+                if (index == day.Value.Index)
                 {
                     SelectedDay = day.Value;
                     return;
@@ -120,9 +120,9 @@ namespace Omreznina.Logic
 
         public void Update(MonthlyReport monthReport)
         {
-            var allDays = monthReport.DailyReports.OrderBy(d => d.Value.Index).ToArray();
-            days.SyncCollections(allDays.Select(d => d.Key.Day.ToString()).ToArray());
-            var maxY = (double)monthReport.DailyReports.Max(x => x.Value.EnergyPrice + x.Value.OverdraftPowerPrice + x.Value.AgreedPowerPrice);
+            var allDays = monthReport.DailyReports.Values.OrderBy(d => d.Index).ToArray();
+            days.SyncCollections(allDays.Select(d => d.Day.Day.ToString()).ToArray());
+            var maxY = (double)allDays.Max(x => x.EnergyPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
             var roundedMaxY = Math.Round(maxY * 1.25);
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
@@ -130,20 +130,20 @@ namespace Omreznina.Logic
             }
             if (monthReport.Month != previouslySelectedMonth?.Month || selectedDay == null || selectedDay.Index >= days.Count)
             {
-                previouslySelectedMonth = monthReport;
-                SelectedDay = monthReport.DailyReports
-                    .OrderByDescending(d => d.Value.OverdraftPowerPrice)
-                    .ThenByDescending(d => d.Value.EnergyPrice + d.Value.AgreedPowerPrice)
-                    .ThenBy(d => d.Value.Index)
-                    .FirstOrDefault(d => d.Value.OverdraftPowerPrice > 0).Value;
+                SelectedDay = allDays
+                    .OrderByDescending(d => d.OverdraftPowerPrice)
+                    .ThenByDescending(d => d.EnergyPrice + d.AgreedPowerPrice)
+                    .ThenBy(d => d.Index)
+                    .First();
             }
             else
             {
                 SelectedDay = monthReport.DailyReports[SelectedDay.Day];
             }
-            agreedPowerPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.AgreedPowerPrice).ToArray());
-            energyPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.EnergyPrice).ToArray());
-            overdraftPrice.SyncCollections(monthReport.DailyReports.Select(d => d.Value.OverdraftPowerPrice).ToArray());
+            previouslySelectedMonth = monthReport;
+            agreedPowerPrice.SyncCollections(allDays.Select(d => d.AgreedPowerPrice).ToArray());
+            energyPrice.SyncCollections(allDays.Select(d => d.EnergyPrice).ToArray());
+            overdraftPrice.SyncCollections(allDays.Select(d => d.OverdraftPowerPrice).ToArray());
             zeros.SyncCollections(new decimal[days.Count]);
         }
     }

@@ -102,6 +102,7 @@
         <div class="col-9" style="height:400px;">
             <CartesianChart @ref=monthsChart
                             Tooltip="MonthsTooltip"
+                            LegendTextSize="13"
                             Series="ViewModel.MonthsViewModel.Series"
                             XAxes="ViewModel.MonthsViewModel.XAxis"
                             YAxes="ViewModel.MonthsViewModel.YAxis"
@@ -111,6 +112,7 @@
         <div class="col-3" style="height:400px;">
             <CartesianChart Series="ViewModel.AllCategoriesViewModel.Series"
                             Tooltip="MonthsTooltip"
+                            LegendTextSize="13"
                             XAxes="ViewModel.AllCategoriesViewModel.XAxis"
                             YAxes="ViewModel.AllCategoriesViewModel.YAxis"
                             LegendPosition=@LiveChartsCore.Measure.LegendPosition.Left />

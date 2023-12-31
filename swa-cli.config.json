@@ -6,7 +6,9 @@
       "outputLocation": "bin\\wwwroot",
       "appBuildCommand": "dotnet publish -c Release -o bin",
       "run": "dotnet watch run",
-      "appDevserverUrl": "http://localhost:8000"
+      "appDevserverUrl": "http://localhost:8000",
+      "appName": "omreznina",
+      "resourceGroup": "omreznina"
     }
   }
 }

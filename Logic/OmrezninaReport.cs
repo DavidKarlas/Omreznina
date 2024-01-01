@@ -7,7 +7,7 @@ namespace Omreznina.Client.Logic
 {
     public class CalculationOptions
     {
-        public static (string Text, int ObracunskaMoc, int Amps, bool ThreePhase)[] AllVarovalkePowers =
+        public static (string Text, int ObracunskaMoc, int Amps, bool ThreePhase)[] AllBreakersOptions =
              [
             ("3kW (1x16 A)", 3, 16, false),
             ("3kW (1x20 A)", 3, 20, false),
@@ -25,7 +25,7 @@ namespace Omreznina.Client.Logic
             ("43kW (3x63 A)", 43, 63, true)
             ];
 
-        private Dictionary<string, (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)> MappedVarovalkaPowers;
+        private Dictionary<string, (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)> MappedPowerBreakers;
 
         public class AgreedPowerBlocks : ObservableCollection<decimal>
         {
@@ -100,31 +100,31 @@ namespace Omreznina.Client.Logic
         public bool NetMetering { get; set; } = false;
         public string OldPricelist { get; set; } = "2023.11.1";
 
-        private string varovalkeText = "10kW (3x25 A)";
-        public string VarovalkePowerText
+        private string breakersText = "10kW (3x25 A)";
+        public string BreakersText
         {
             get
             {
-                return varovalkeText;
+                return breakersText;
             }
             set
             {
-                varovalkeText = value;
-                AgreedMaxPowerBlocks.SetVarovalkePower(VarovalkePower);
+                breakersText = value;
+                AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue);
             }
         }
 
-        public (int ObracunskaMoc, int Amps, bool ThreePhase) VarovalkePower
+        public (int ObracunskaMoc, int Amps, bool ThreePhase) BreakersValue
         {
-            get => MappedVarovalkaPowers[varovalkeText];
+            get => MappedPowerBreakers[breakersText];
         }
 
         public bool TwoTariffSystem { get; set; } = true;
 
         public CalculationOptions()
         {
-            MappedVarovalkaPowers = AllVarovalkePowers.ToDictionary(v => v.Text, v => (v.ObracunskaMoc, v.Amps, v.ThreePhase));
-            AgreedMaxPowerBlocks.SetVarovalkePower(VarovalkePower);
+            MappedPowerBreakers = AllBreakersOptions.ToDictionary(v => v.Text, v => (v.ObracunskaMoc, v.Amps, v.ThreePhase));
+            AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue);
         }
     }
 
@@ -140,8 +140,17 @@ namespace Omreznina.Client.Logic
         {
             CalculationOptions = calculationOptions;
             MonthlyReports = rawUsages.Select(m => new MonthlyReport(calculationOptions, m.Key, m.Value)).OrderBy(m => m.Month).ToArray();
-            EnergyPrice = MonthlyReports.Sum(m => m.EnergyPrice);
-            OldEnergyPrice = MonthlyReports.Sum(m => m.OldEnergyPrice);
+            NetMeteringEnergyInKWh = Math.Max(0M, MonthlyReports.Sum(m => m.NetMeteringEnergyInKWh));
+            if (calculationOptions.NetMetering)
+            {
+                EnergyPrice = NetMeteringEnergyInKWh * BlockPrices.GetCombinedEnergyPriceSingleTariffPerKWH(calculationOptions.IncludeVAT);
+                OldEnergyPrice = NetMeteringEnergyInKWh * BlockPrices.GetOldEnergyPriceSingleTariffPerKWh(calculationOptions);
+            }
+            else
+            {
+                EnergyPrice = MonthlyReports.Sum(m => m.EnergyPrice);
+                OldEnergyPrice = MonthlyReports.Sum(m => m.OldEnergyPrice);
+            }
             OldFixedPrice = MonthlyReports.Sum(m => m.OldFixedPrice);
             AgreedPowerPrice = MonthlyReports.Sum(m => m.AgreedPowerPrice);
             OverdraftPowerPrice = MonthlyReports.Sum(m => m.OverdraftPowerPrice);
@@ -236,7 +245,7 @@ namespace Omreznina.Client.Logic
                 + calculationOptions.AgreedMaxPowerBlocks[i] * BlockPrices.GetTransferPowerPricePerKW(calculationOptions.IncludeVAT, i);
             }
             AgreedPowerPrice = AgreedPowerPricePerBlock.Sum();
-            OldFixedPrice = calculationOptions.VarovalkePower.ObracunskaMoc * BlockPrices.GetFixedPricePerKW(calculationOptions.IncludeVAT, calculationOptions.OldPricelist);
+            OldFixedPrice = calculationOptions.BreakersValue.ObracunskaMoc * BlockPrices.GetFixedPricePerKW(calculationOptions.IncludeVAT, calculationOptions.OldPricelist);
 
             var overdraftsPerBlock = new decimal[5];
             var overdraftsPerBlockPowerOf2 = new decimal[5];
@@ -273,8 +282,13 @@ namespace Omreznina.Client.Logic
                 }
                 var maxUsage = calculationOptions.AgreedMaxPowerBlocks[usage.Block];
                 var overDraftPower = Math.Max(0, usage.ConsumedPower - maxUsage);
-                var energyTransportPrice = usage.ConsumedEnergy * BlockPrices.GetCombinedEnergyPricePerKWH(calculationOptions.IncludeVAT, usage.Block);
                 var overdraftPrice = overdraftsPerBlock[usage.Block] == 0 ? 0 : OverdraftPowerPricePerBlock[usage.Block] * (overDraftPower / overdraftsPerBlock[usage.Block]);
+
+                var energyTransportPrice = calculationOptions.NetMetering ? 0 : usage.ConsumedEnergy * BlockPrices.GetCombinedEnergyPricePerKWH(calculationOptions.IncludeVAT, usage.Block);
+                var oldEnergyPrice = calculationOptions.NetMetering ? 0 : usage.ConsumedEnergy * BlockPrices.GetOldTransferEnergyPricePerKWH(calculationOptions.IncludeVAT,
+                                                                                                           calculationOptions.TwoTariffSystem ? usage.HighTariff : null,
+                                                                                                           calculationOptions.OldPricelist);
+
                 dayReport.Usages.Add(
                     new(
                         usage,
@@ -282,9 +296,7 @@ namespace Omreznina.Client.Logic
                         energyTransportPrice,
                         overdraftPrice,
                         AgreedPowerPricePerBlock[usage.Block] / usageCountPerBlock[usage.Block],
-                        usage.ConsumedEnergy * BlockPrices.GetOldTransferEnergyPricePerKWH(calculationOptions.IncludeVAT,
-                                                                                           calculationOptions.TwoTariffSystem ? usage.HighTariff : null,
-                                                                                           calculationOptions.OldPricelist)
+                        oldEnergyPrice
                         )
                     );
             }

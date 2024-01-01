@@ -21,8 +21,8 @@
                 <fieldset class="border p-2">
                     <legend class="float-none w-auto">Nastavitve</legend>
                     <span>Trenutna obračunska moč:</span>
-                    <InputSelect @bind-Value="ViewModel.CalculationOptions.VarovalkePowerText">
-                        @foreach (var (text, _, _, _) in CalculationOptions.AllVarovalkePowers)
+                    <InputSelect @bind-Value="ViewModel.CalculationOptions.BreakersText">
+                        @foreach (var (text, _, _, _) in CalculationOptions.AllBreakersOptions)
                         {
                             <option value="@text">@text</option>
                         }

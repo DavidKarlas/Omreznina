@@ -92,7 +92,7 @@ namespace Omreznina.Client.Logic
                     else
                         minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
                 }
-
+                minimalPowerForBlock1 = Math.Round(minimalPowerForBlock1, 1);
                 if (oldMinimalPowerForBlock1 != minimalPowerForBlock1)
                 {
                     if (this[0] < minimalPowerForBlock1)

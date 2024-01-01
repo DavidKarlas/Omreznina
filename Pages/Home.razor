@@ -147,10 +147,6 @@
     private decimal GetBlockStepSize(int block)
     {
         var currentPower = ViewModel.CalculationOptions.AgreedMaxPowerBlocks[block];
-        if (currentPower % 0.1M > 0)
-        {
-            return 0.01M;
-        }
         if (currentPower > 20 && currentPower % 1 == 0)
         {
             return 1M;

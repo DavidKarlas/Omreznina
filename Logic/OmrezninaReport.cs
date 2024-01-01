@@ -31,34 +31,36 @@ namespace Omreznina.Client.Logic
         {
             public event Action<string>? ErrorMessage;
 
-            protected override void SetItem(int index, decimal item)
+            protected override void SetItem(int index, decimal newValue)
             {
                 if (index > 4)
                     throw new System.Exception("Max 5 blocks");
                 if (index < 0)
                     throw new IndexOutOfRangeException();
 
-                if (index == 0)
+                if (newValue < minimalPowerForBlock1)
                 {
-                    if (item < minimalPowerForBlock1)
-                    {
-                        item = minimalPowerForBlock1;
-                        ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimalPowerForBlock1.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                    }
+                    newValue = minimalPowerForBlock1;
+                    ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimalPowerForBlock1.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
                 }
-                else
+                //else
+                //{
+                //    if (item < this[index - 1])
+                //    {
+                //        item = this[index - 1];
+                //        ErrorMessage?.Invoke($"Moč bloka ne sme biti manjša od bloka pred njim na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
+                //    }
+                //}
+                base.SetItem(index, newValue);
+                if (index + 1 < Count && this[index + 1] < newValue)
                 {
-                    if (item < this[index - 1])
-                    {
-                        item = this[index - 1];
-                        ErrorMessage?.Invoke($"Moč bloka ne sme biti manjša od bloka pred njim na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                    }
-                }
-                base.SetItem(index, item);
-                if (index + 1 < Count && this[index + 1] < item)
-                {
-                    this[index + 1] = item;
+                    this[index + 1] = newValue;
                     ErrorMessage?.Invoke($"Moč {index + 2}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti manjša na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
+                }
+                if(index > 0 && this[index - 1] > newValue)
+                {
+                    this[index - 1] = newValue;
+                    ErrorMessage?.Invoke($"Moč {index}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti večja na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
                 }
             }
 

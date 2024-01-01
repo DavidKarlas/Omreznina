@@ -155,6 +155,10 @@
         {
             return 0.5M;
         }
+        if (currentPower > 20 && currentPower % 1 == 0)
+        {
+            return 1M;
+        }
         return 0.1M;
     }
 

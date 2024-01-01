@@ -38,10 +38,15 @@ namespace Omreznina.Client.Logic
                 if (index < 0)
                     throw new IndexOutOfRangeException();
 
-                if (newValue < minimalPowerForBlock1)
+                if (newValue < minimumPowerForBlocks)
                 {
-                    newValue = minimalPowerForBlock1;
-                    ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimalPowerForBlock1.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
+                    newValue = minimumPowerForBlocks;
+                    ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimumPowerForBlocks.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
+                }
+                if (newValue > maximumPowerForBlocks)
+                {
+                    newValue = maximumPowerForBlocks;
+                    ErrorMessage?.Invoke($"Moč blokov mora biti manjša ali enaka moči varovalk");
                 }
                 base.SetItem(index, newValue);
                 if (index + 1 < Count && this[index + 1] < newValue)
@@ -56,7 +61,8 @@ namespace Omreznina.Client.Logic
                 }
             }
 
-            private decimal minimalPowerForBlock1;
+            private decimal minimumPowerForBlocks;
+            private decimal maximumPowerForBlocks;
 
             /// <summary>
             /// (4) Minimalna dogovorjena obračunska moč za časovni blok 1 uporabnika sistema se določi:
@@ -67,29 +73,36 @@ namespace Omreznina.Client.Logic
             /// </summary>
             public void SetVarovalkePower((int ObracunskaMoc, int Amps, bool ThreePhase) varovalkePower)
             {
-                var prikljucnaMoc = (varovalkePower.Amps * 230 * (varovalkePower.ThreePhase ? 3 : 1)) / 1000;
-                var oldMinimalPowerForBlock1 = minimalPowerForBlock1;
+                var prikljucnaMoc = (varovalkePower.Amps * 230 * (varovalkePower.ThreePhase ? 3 : 1)) / 1000M;
+                var oldMinimalPowerForBlock1 = minimumPowerForBlocks;
                 if (varovalkePower.ThreePhase)
                 {
                     if (prikljucnaMoc <= 17)
-                        minimalPowerForBlock1 = Math.Max(3.5M, 0.27M * prikljucnaMoc);
+                        minimumPowerForBlocks = Math.Max(3.5M, 0.27M * prikljucnaMoc);
                     else if (prikljucnaMoc <= 43)
-                        minimalPowerForBlock1 = 0.34M * prikljucnaMoc;
+                        minimumPowerForBlocks = 0.34M * prikljucnaMoc;
                     else
-                        minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
+                        minimumPowerForBlocks = 0.25M * varovalkePower.ObracunskaMoc;
                 }
                 else
                 {
                     if (prikljucnaMoc <= 43)
-                        minimalPowerForBlock1 = Math.Max(2M, 0.31M * prikljucnaMoc);
+                        minimumPowerForBlocks = Math.Max(2M, 0.31M * prikljucnaMoc);
                     else
-                        minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
+                        minimumPowerForBlocks = 0.25M * varovalkePower.ObracunskaMoc;
                 }
-                minimalPowerForBlock1 = Math.Round(minimalPowerForBlock1, 1);
-                if (oldMinimalPowerForBlock1 != minimalPowerForBlock1)
+                minimumPowerForBlocks = Math.Round(minimumPowerForBlocks, 1);
+                if (oldMinimalPowerForBlock1 != minimumPowerForBlocks)
                 {
-                    if (this[0] < minimalPowerForBlock1)
-                        this[0] = minimalPowerForBlock1;
+                    if (this[0] < minimumPowerForBlocks)
+                        this[0] = minimumPowerForBlocks;
+                }
+                var oldMaximumPowerForBlocks = maximumPowerForBlocks;
+                maximumPowerForBlocks = Math.Round(prikljucnaMoc, 1);
+                if (maximumPowerForBlocks != oldMaximumPowerForBlocks)
+                {
+                    if (this[4] > maximumPowerForBlocks)
+                        this[4] = maximumPowerForBlocks;
                 }
             }
         }

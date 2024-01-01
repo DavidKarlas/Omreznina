@@ -9,20 +9,20 @@ namespace Omreznina.Client.Logic
     {
         public static (string Text, int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)[] AllVarovalkePowers =
              [
-            ("3kW (1x16 A)", 3, 3, false),
-            ("3kW (1x20 A)", 3, 5, false),
-            ("6kW (1x25 A)", 6, 6, false),
-            ("7kW (1x32 A)", 7, 7, false),
-            ("7kW (1x35 A)", 7, 8, false),
+            ("3kW (1x16 A)", 3, 16*250, false),
+            ("3kW (1x20 A)", 3, 20*250, false),
+            ("6kW (1x25 A)", 6, 25*250, false),
+            ("7kW (1x32 A)", 7, 32*250, false),
+            ("7kW (1x35 A)", 7, 35*250, false),
 
-            ("7kW (3x16 A)", 7, 11, true),
-            ("7kW (3x20 A)", 7, 14, true),
-            ("10kW (3x25 A)", 10, 17, true),
-            ("22kW (3x32 A)", 22, 22, true),
-            ("24kW (3x35 A)", 24, 24, true),
-            ("28kW (3x40 A)", 28, 28, true),
-            ("35kW (3x50 A)", 35, 35, true),
-            ("43kW (3x63 A)", 43, 43, true)
+            ("7kW (3x16 A)", 7, 16*3*250, true),
+            ("7kW (3x20 A)", 7, 20*3*250, true),
+            ("10kW (3x25 A)", 10, 25*3*250, true),
+            ("22kW (3x32 A)", 22, 32*3*250, true),
+            ("24kW (3x35 A)", 24, 35*3*250, true),
+            ("28kW (3x40 A)", 28, 40*3*250, true),
+            ("35kW (3x50 A)", 35, 50*3*250, true),
+            ("43kW (3x63 A)", 43, 63*3*250, true)
             ];
 
         private Dictionary<string, (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)> MappedVarovalkaPowers;
@@ -57,7 +57,7 @@ namespace Omreznina.Client.Logic
                     this[index + 1] = newValue;
                     ErrorMessage?.Invoke($"Moč {index + 2}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti manjša na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
                 }
-                if(index > 0 && this[index - 1] > newValue)
+                if (index > 0 && this[index - 1] > newValue)
                 {
                     this[index - 1] = newValue;
                     ErrorMessage?.Invoke($"Moč {index}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti večja na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");

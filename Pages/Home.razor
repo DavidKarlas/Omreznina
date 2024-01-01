@@ -1,4 +1,6 @@
 ﻿@page "/"
+@using Blazored.Toast
+@using Blazored.Toast.Services
 @using LiveChartsCore.Drawing
 @using LiveChartsCore.SkiaSharpView.Blazor
 @using Omreznina.Client.Logic
@@ -7,7 +9,7 @@
 @using Omreznina.Shared
 @using System.Diagnostics
 @implements IDisposable;
-
+@inject IToastService toastService
 <EditForm EditContext="_editContext">
     <div class="container-fluid">
         <div class="row">
@@ -164,6 +166,13 @@
     public Home()
     {
         _editContext = new EditContext(ViewModel.CalculationOptions);
+        ViewModel.CalculationOptions.AgreedMaxPowerBlocks.ErrorMessage += AgreedMaxBlocksMessage;
+    }
+
+    private void AgreedMaxBlocksMessage(string message)
+    {
+        toastService.ClearAll();
+        toastService.ShowWarning(message);
     }
 
     public void OnMonthlyPointerDown(PointerEventArgs e)

@@ -10,6 +10,13 @@
 @using System.Diagnostics
 @implements IDisposable;
 @inject IToastService toastService
+@inject IJSRuntime JS
+
+
+<button @onclick="DownloadFileFromStream">
+    Download File From Stream
+</button>
+
 <EditForm EditContext="_editContext">
     <div class="container-fluid">
         <div class="row">
@@ -143,6 +150,14 @@
     private MonthsTooltip MonthsTooltip { get; set; } = new();
     public ViewModel ViewModel { get; set; } = new();
     private EditContext _editContext;
+
+    private async Task DownloadFileFromStream()
+    {
+        var fileStream = PdfExporter.Export(ViewModel);
+        var fileName = "Omreznina.pdf";
+        using var streamRef = new DotNetStreamReference(stream: fileStream);
+        await JS.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef);
+    }
 
     private decimal GetBlockStepSize(int block)
     {

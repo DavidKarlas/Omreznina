@@ -7,22 +7,22 @@ namespace Omreznina.Client.Logic
 {
     public class CalculationOptions
     {
-        public static (string Text, int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)[] AllVarovalkePowers =
+        public static (string Text, int ObracunskaMoc, int Amps, bool ThreePhase)[] AllVarovalkePowers =
              [
-            ("3kW (1x16 A)", 3, 16*250, false),
-            ("3kW (1x20 A)", 3, 20*250, false),
-            ("6kW (1x25 A)", 6, 25*250, false),
-            ("7kW (1x32 A)", 7, 32*250, false),
-            ("7kW (1x35 A)", 7, 35*250, false),
+            ("3kW (1x16 A)", 3, 16, false),
+            ("3kW (1x20 A)", 3, 20, false),
+            ("6kW (1x25 A)", 6, 25, false),
+            ("7kW (1x32 A)", 7, 32, false),
+            ("7kW (1x35 A)", 7, 35, false),
 
-            ("7kW (3x16 A)", 7, 16*3*250, true),
-            ("7kW (3x20 A)", 7, 20*3*250, true),
-            ("10kW (3x25 A)", 10, 25*3*250, true),
-            ("22kW (3x32 A)", 22, 32*3*250, true),
-            ("24kW (3x35 A)", 24, 35*3*250, true),
-            ("28kW (3x40 A)", 28, 40*3*250, true),
-            ("35kW (3x50 A)", 35, 50*3*250, true),
-            ("43kW (3x63 A)", 43, 63*3*250, true)
+            ("7kW (3x16 A)", 7, 16  , true),
+            ("7kW (3x20 A)", 7, 20  , true),
+            ("10kW (3x25 A)", 10, 25, true),
+            ("22kW (3x32 A)", 22, 32, true),
+            ("24kW (3x35 A)", 24, 35, true),
+            ("28kW (3x40 A)", 28, 40, true),
+            ("35kW (3x50 A)", 35, 50, true),
+            ("43kW (3x63 A)", 43, 63, true)
             ];
 
         private Dictionary<string, (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)> MappedVarovalkaPowers;
@@ -43,14 +43,6 @@ namespace Omreznina.Client.Logic
                     newValue = minimalPowerForBlock1;
                     ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimalPowerForBlock1.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
                 }
-                //else
-                //{
-                //    if (item < this[index - 1])
-                //    {
-                //        item = this[index - 1];
-                //        ErrorMessage?.Invoke($"Moč bloka ne sme biti manjša od bloka pred njim na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                //    }
-                //}
                 base.SetItem(index, newValue);
                 if (index + 1 < Count && this[index + 1] < newValue)
                 {
@@ -68,27 +60,28 @@ namespace Omreznina.Client.Logic
 
             /// <summary>
             /// (4) Minimalna dogovorjena obračunska moč za časovni blok 1 uporabnika sistema se določi:
-            /// -        za enofazni priključek uporabnika sistema s priključno močjo enako ali manjšo od 43 kW, kot 31 % priključne moči iz soglasja za priključitev, vendar ne manj kot 2,0 kW;
-            /// -        za trifazne priključke s priključno močjo enako ali manjšo od 43 kW, kot 27 % priključne moči iz soglasja za priključitev, vendar ne manj kot 3,5 kW za uporabnike sistema s priključno močjo do vključno 17 kW;
-            /// -        za trifazne priključke s priključno močjo enako ali manjšo od 43 kW ter za uporabnike sistema iz drugega odstavka 37. člena tega akta, kot 34 % priključne moči iz soglasja za priključitev, za uporabnike sistema s priključno močjo nad 17 kW;
-            /// -        za uporabnike sistema s priključno močjo nad 43 kW kot 25 % priključne moči.
+            ///    - za enofazni priključek uporabnika sistema s priključno močjo enako ali manjšo od 43 kW, kot 31 % priključne moči iz soglasja za priključitev, vendar ne manj kot 2,0 kW;
+            ///    - za trifazne priključke s priključno močjo enako ali manjšo od 43 kW, kot 27 % priključne moči iz soglasja za priključitev, vendar ne manj kot 3,5 kW za uporabnike sistema s priključno močjo do vključno 17 kW;
+            ///    - za trifazne priključke s priključno močjo enako ali manjšo od 43 kW ter za uporabnike sistema iz drugega odstavka 37. člena tega akta, kot 34 % priključne moči iz soglasja za priključitev, za uporabnike sistema s priključno močjo nad 17 kW;
+            ///    - za uporabnike sistema s priključno močjo nad 43 kW kot 25 % priključne moči.
             /// </summary>
-            public void SetVarovalkePower((int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase) varovalkePower)
+            public void SetVarovalkePower((int ObracunskaMoc, int Amps, bool ThreePhase) varovalkePower)
             {
+                var prikljucnaMoc = (varovalkePower.Amps * 230 * (varovalkePower.ThreePhase ? 3 : 1)) / 1000;
                 var oldMinimalPowerForBlock1 = minimalPowerForBlock1;
                 if (varovalkePower.ThreePhase)
                 {
-                    if (varovalkePower.PrikjucnaMoc <= 17)
-                        minimalPowerForBlock1 = Math.Max(3.5M, 0.27M * varovalkePower.PrikjucnaMoc);
-                    else if (varovalkePower.PrikjucnaMoc <= 43)
-                        minimalPowerForBlock1 = 0.34M * varovalkePower.PrikjucnaMoc;
+                    if (prikljucnaMoc <= 17)
+                        minimalPowerForBlock1 = Math.Max(3.5M, 0.27M * prikljucnaMoc);
+                    else if (prikljucnaMoc <= 43)
+                        minimalPowerForBlock1 = 0.34M * prikljucnaMoc;
                     else
                         minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
                 }
                 else
                 {
-                    if (varovalkePower.PrikjucnaMoc <= 43)
-                        minimalPowerForBlock1 = Math.Max(2M, 0.31M * varovalkePower.PrikjucnaMoc);
+                    if (prikljucnaMoc <= 43)
+                        minimalPowerForBlock1 = Math.Max(2M, 0.31M * prikljucnaMoc);
                     else
                         minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
                 }
@@ -121,7 +114,7 @@ namespace Omreznina.Client.Logic
             }
         }
 
-        public (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase) VarovalkePower
+        public (int ObracunskaMoc, int Amps, bool ThreePhase) VarovalkePower
         {
             get => MappedVarovalkaPowers[varovalkeText];
         }
@@ -130,7 +123,7 @@ namespace Omreznina.Client.Logic
 
         public CalculationOptions()
         {
-            MappedVarovalkaPowers = AllVarovalkePowers.ToDictionary(v => v.Text, v => (v.ObracunskaMoc, v.PrikjucnaMoc, v.ThreePhase));
+            MappedVarovalkaPowers = AllVarovalkePowers.ToDictionary(v => v.Text, v => (v.ObracunskaMoc, v.Amps, v.ThreePhase));
             AgreedMaxPowerBlocks.SetVarovalkePower(VarovalkePower);
         }
     }

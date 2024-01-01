@@ -1,5 +1,6 @@
 ﻿
 
+
 namespace Omreznina.Client.Logic
 {
     public static class BlockPrices
@@ -108,6 +109,27 @@ namespace Omreznina.Client.Logic
                 return tariff * 1.22M;
             }
             return tariff;
+        }
+
+        internal static decimal GetCombinedEnergyPriceSingleTariffPerKWH(bool includeVAT)
+        {
+            // Distro, transfer
+            var price = 0.00607M + 0.01246M;
+            if (includeVAT)
+            {
+                return price * 1.22M;
+            }
+            return price;
+        }
+
+        internal static decimal GetOldEnergyPriceSingleTariffPerKWh(CalculationOptions calculationOptions)
+        {
+            var price = FixedPriceListPerKW[calculationOptions.OldPricelist].ConstantTariff;
+            if (calculationOptions.IncludeVAT)
+            {
+                return price * 1.22M;
+            }
+            return price;
         }
 
         private static decimal[] DistributionEnergyPricePerKWH { get; } = new decimal[] {

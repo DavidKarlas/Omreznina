@@ -139,11 +139,9 @@ namespace Omreznina.Logic
         {
             var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.OldFixedPrice + x.OldEnergyPrice, x.AgreedPowerPrice + x.EnergyPrice + x.OverdraftPowerPrice));
             var roundedMaxY = Math.Floor(maxY / 50.0) * 50.0 + 65.0;
-            bool forceUpdate = false;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
                 YAxis[0].MaxLimit = roundedMaxY;
-                forceUpdate = true;
             }
             months.SyncCollections(mainReport.MonthlyReports.Select(x => UIHelper.MonthConverter(x.Month.Month)).ToArray());
             if (!selectMonth.HasValue || selectMonth >= months.Count)
@@ -153,7 +151,7 @@ namespace Omreznina.Logic
                     indexOfFirstMonthWithOverdraft = 0;
                 SelectMonth = indexOfFirstMonthWithOverdraft;
             }
-            else if (forceUpdate)
+            else
             {
                 SelectMonth = SelectMonth;
             }

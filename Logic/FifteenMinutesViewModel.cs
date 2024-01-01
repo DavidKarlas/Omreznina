@@ -75,8 +75,8 @@ namespace Omreznina.Logic
         {
             timesOfDay.SyncCollections(dayReport.Usages.Select(u => u.Source.DateTime.Minute == 0 ? u.Source.DateTime.ToString("HH:mm") : "").ToArray());
             overdraftPrice.SyncCollections(dayReport.Usages.Select(u => u.OverdraftPrice).ToArray());
-            actualPower.SyncCollections(dayReport.Usages.Select(u => u.Source.Power).ToArray());
-            var maxPower = dayReport.Usages.Max(u => u.Source.Power);
+            actualPower.SyncCollections(dayReport.Usages.Select(u => u.Source.ConsumedPower).ToArray());
+            var maxPower = dayReport.Usages.Max(u => u.Source.ConsumedPower);
             var visuals = new List<GeometryVisual<RectangleGeometry>>();
             var lowBlock = dayReport.Usages[0].Source.Block;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[lowBlock]);

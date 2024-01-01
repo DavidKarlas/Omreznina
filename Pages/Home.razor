@@ -19,10 +19,10 @@
                 <fieldset class="border p-2">
                     <legend class="float-none w-auto">Nastavitve</legend>
                     <span>Trenutna obračunska moč:</span>
-                    <InputSelect @bind-Value="ViewModel.CalculationOptions.VarovalkePower">
-                        @foreach (var (text, power) in BlockPrices.AllVarovalkePowers)
+                    <InputSelect @bind-Value="ViewModel.CalculationOptions.VarovalkePowerText">
+                        @foreach (var (text, _, _, _) in CalculationOptions.AllVarovalkePowers)
                         {
-                            <option value="@power">@text</option>
+                            <option value="@text">@text</option>
                         }
                     </InputSelect>
                     <span>Trenutni način obračuna:</span>
@@ -39,6 +39,8 @@
                     </InputSelect>
                     <span style="white-space:nowrap;">Vključi DDV:</span>
                     <InputCheckbox @bind-Value="ViewModel.CalculationOptions.IncludeVAT" />
+                    <span style="white-space:nowrap;">Net-Metering:</span>
+                    <InputCheckbox @bind-Value="ViewModel.CalculationOptions.NetMetering" />
                 </fieldset>
             </div>
             <div class="col-1" style="height=100px">
@@ -54,7 +56,7 @@
         <div class="row">
             <div class="col-12">
                 <fieldset class="border p-2">
-                    <legend class="float-none w-auto">Dogovorjene moči blokov</legend>
+                    <legend class="float-none w-auto">Dogovorjene moči po blokih</legend>
                     <Tooltip2 Text=@($"Blok 1({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 0).ToEuro()}/kW)")>
                         <h3>Blok 1</h3>
                         <span>
@@ -63,35 +65,35 @@
                             To pomeni, da za dogovorjeno moč @ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0].ToKW() bo potrebno plačati v mesecih od novembra do februarja @((BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 0) * ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]).ToEuro()) ne glede na količino porabljene elektrike.
                         </span>
                     </Tooltip2>
-                    <InputNumber @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
+                    <InputNumber step="@Power1StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
                     <Tooltip2 Text=@($"Blok 2({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 1).ToEuro()}/kW)")>
                         <h3>Blok 2</h3>
                         <span>
                             Blok bla bla.
                         </span>
                     </Tooltip2>
-                    <InputNumber @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
+                    <InputNumber step="@Power2StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
                     <Tooltip2 Text=@($"Blok 3({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 2).ToEuro()}/kW)")>
                         <h3>Blok 3</h3>
                         <span>
                             Blok bla bla.
                         </span>
                     </Tooltip2>
-                    <InputNumber @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
+                    <InputNumber step="@Power3StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
                     <Tooltip2 Text=@($"Blok 4({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 3).ToEuro()}/kW)")>
                         <h3>Blok 4</h3>
                         <span>
                             Blok bla bla.
                         </span>
                     </Tooltip2>
-                    <InputNumber @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
+                    <InputNumber step="@Power4StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
                     <Tooltip2 Text=@($"Blok 5({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions.IncludeVAT, 4).ToEuro()}/kW)")>
                         <h3>Blok 5</h3>
                         <span>
                             Blok bla bla.
                         </span>
                     </Tooltip2>
-                    <InputNumber @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
+                    <InputNumber step="@Power5StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
                 </fieldset>
             </div>
         </div>
@@ -139,6 +141,22 @@
     private MonthsTooltip MonthsTooltip { get; set; } = new();
     public ViewModel ViewModel { get; set; } = new();
     private EditContext _editContext;
+
+    private decimal GetBlockStepSize(int block)
+    {
+        var currentPower = ViewModel.CalculationOptions.AgreedMaxPowerBlocks[block];
+        if (currentPower > 5 && currentPower % 0.5M == 0)
+        {
+            return 0.5M;
+        }
+        return 0.1M;
+    }
+
+    private decimal Power1StepSize => GetBlockStepSize(0);
+    private decimal Power2StepSize => GetBlockStepSize(1);
+    private decimal Power3StepSize => GetBlockStepSize(2);
+    private decimal Power4StepSize => GetBlockStepSize(3);
+    private decimal Power5StepSize => GetBlockStepSize(4);
 
     CartesianChart monthsChart;
     CartesianChart dailyChart;

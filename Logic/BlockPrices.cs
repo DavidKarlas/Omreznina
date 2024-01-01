@@ -4,24 +4,6 @@ namespace Omreznina.Client.Logic
 {
     public static class BlockPrices
     {
-        public static (string Text, int Power)[] AllVarovalkePowers =
-             [
-            ("3kW (1x16 A)", 3),
-            ("3kW (1x20 A)", 3),
-            ("6kW (1x25 A)", 6),
-            ("7kW (1x32 A)", 7),
-            ("7kW (1x35 A)", 7),
-
-            ("7kW (3x16 A)", 7),
-            ("7kW (3x20 A)", 7),
-            ("10kW (3x25 A)", 10),
-            ("22kW (3x32 A)", 22),
-            ("24kW (3x35 A)", 24),
-            ("28kW (3x40 A)", 28),
-            ("35kW (3x50 A)", 35),
-            ("43kW (3x63 A)", 43)
-            ];
-
         public static decimal GetFactor(int Year)
         {
             if (Year < 2026)

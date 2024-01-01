@@ -123,7 +123,7 @@ namespace Omreznina.Logic
             var allDays = monthReport.DailyReports.Values.OrderBy(d => d.Index).ToArray();
             days.SyncCollections(allDays.Select(d => d.Day.Day.ToString()).ToArray());
             var maxY = (double)allDays.Max(x => x.EnergyPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
-            var roundedMaxY = Math.Round(maxY * 1.25);
+            var roundedMaxY = Math.Round(maxY * 1.25) + 1;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
                 YAxis[0].MaxLimit = roundedMaxY;

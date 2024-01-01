@@ -1,16 +1,10 @@
-﻿using LiveChartsCore.Measure;
-using LiveChartsCore.SkiaSharpView.Painting;
-using LiveChartsCore.SkiaSharpView;
-using LiveChartsCore;
-using SkiaSharp;
-using Omreznina.Client.Logic;
-using System.Diagnostics;
+﻿using Omreznina.Client.Logic;
 
 namespace Omreznina.Logic
 {
     public class ViewModel
     {
-        public CalculationOptions CalculationOptions { get; } = new CalculationOptions([7.5M, 8, 9, 10, 11], 2025, false, 10);
+        public CalculationOptions CalculationOptions { get; } = new CalculationOptions();
 
         private Dictionary<(int Year, int Month), List<RawUsage15Min>>? rawUsages;
 

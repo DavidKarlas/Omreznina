@@ -19,6 +19,7 @@ namespace Omreznina.Logic
         private readonly ObservableCollection<decimal> overdraftPrice = new();
         private readonly ObservableCollection<decimal> agreedPower = new();
         private readonly ObservableCollection<decimal> actualPower = new();
+        private readonly ObservableCollection<decimal> returnPower = new();
 
         public ISeries[] Series { get; }
         public Axis[] XAxis { get; }
@@ -37,6 +38,16 @@ namespace Omreznina.Logic
                      GeometryFill = null,
                      ScalesYAt=1,
                      Name = "Dejanska moč"
+                },
+                new LineSeries<decimal>{
+                     Values = returnPower,
+                     Stroke="#00e600".ToPaint(4),
+                     Fill=null,
+                     GeometrySize=0,
+                     GeometryStroke = null,
+                     GeometryFill = null,
+                     ScalesYAt=1,
+                     Name = "Višek samoproizvodnje"
                 },
                new ColumnSeries<decimal>
                {
@@ -76,7 +87,8 @@ namespace Omreznina.Logic
             timesOfDay.SyncCollections(dayReport.Usages.Select(u => u.Source.DateTime.Minute == 0 ? u.Source.DateTime.ToString("HH:mm") : "").ToArray());
             overdraftPrice.SyncCollections(dayReport.Usages.Select(u => u.OverdraftPrice).ToArray());
             actualPower.SyncCollections(dayReport.Usages.Select(u => u.Source.ConsumedPower).ToArray());
-            var maxPower = dayReport.Usages.Max(u => u.Source.ConsumedPower);
+            returnPower.SyncCollections(dayReport.Usages.Select(u => u.Source.GivenPower).ToArray());
+            var maxPower = dayReport.Usages.Max(u => Math.Max(u.Source.ConsumedPower, u.Source.GivenPower));
             var visuals = new List<GeometryVisual<RectangleGeometry>>();
             var lowBlock = dayReport.Usages[0].Source.Block;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[lowBlock]);

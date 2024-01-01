@@ -86,10 +86,11 @@ namespace Omreznina.Client.Logic
                 else
                 {
                     if (varovalkePower.PrikjucnaMoc <= 43)
-                        minimalPowerForBlock1 = Math.Max(2.5M, 0.31M * varovalkePower.PrikjucnaMoc);
+                        minimalPowerForBlock1 = Math.Max(2M, 0.31M * varovalkePower.PrikjucnaMoc);
                     else
                         minimalPowerForBlock1 = 0.25M * varovalkePower.ObracunskaMoc;
                 }
+
                 if (oldMinimalPowerForBlock1 != minimalPowerForBlock1)
                 {
                     if (this[0] < minimalPowerForBlock1)

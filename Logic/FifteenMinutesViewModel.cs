@@ -37,6 +37,7 @@ namespace Omreznina.Logic
         {
             Series = [
                 new LineSeries<decimal>{
+                     XToolTipLabelFormatter = value => TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(value.Index * 15)).ToString("HH:mm"),
                      Values = actualPower,
                      Stroke="#00A9FF".ToPaint(4),
                      Fill=null,

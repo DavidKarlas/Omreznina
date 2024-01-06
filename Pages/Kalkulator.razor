@@ -36,7 +36,7 @@
                 </InputSelect>
             </div>
             <div>
-                <span style="white-space:nowrap;">Net-Metering? Če imate sončno elektrarno in imate letni poračun obkjukate:</span>
+                <span>Net-Metering? Če imate sončno elektrarno in imate letni poračun obkjukate:</span>
                 <InputCheckbox @bind-Value="ViewModel.CalculationOptions.NetMetering" />
             </div>
             <div>
@@ -80,6 +80,7 @@ else if (!ViewModel.ConfirmedData)
 {
     <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
         <h1>Odpri .csv datoteko iz MojElektro.si</h1>
+        <span>Za najboljšo izkušnjo je priporočljivo izvoziti 15-minutno .csv datoteko od 1.1.2023 do 31.12.2023.</span>
         <InputFile id="csvFile" OnChange="@LoadFiles" hidden multiple />
         <button class="btn m-1 btn-primary" onclick="document.getElementById('csvFile').click()">Odpri .csv datoteko iz mojelektro.si</button>
         <Tooltip3>
@@ -254,6 +255,15 @@ else
                 </a>
             </div>
             <article class="content px-4">
+                <EditForm EditContext="_editContext">
+                    <fieldset class="border p-2">
+                        <legend class="float-none w-auto m-0">Hitre nastavitve</legend>
+                        <span>Vključi DDV:</span>
+                        <InputCheckbox @bind-Value="ViewModel.CalculationOptions.IncludeVAT" />
+                        <span>Net-Metering:</span>
+                        <InputCheckbox @bind-Value="ViewModel.CalculationOptions.NetMetering" />
+                    </fieldset>
+                </EditForm>
                 <div class="container-fluid" style="height:150px;">
                     <CartesianChart Series="ViewModel.AllCategoriesViewModel.Series"
                                     Title="ViewModel.AllCategoriesViewModel.Title"

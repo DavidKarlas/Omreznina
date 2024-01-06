@@ -26,6 +26,8 @@ namespace Omreznina.Client.Logic
             ("43kW (3x63 A)", 43, 43, true)
             ];
 
+        public bool No15MinuteData { get; set; } = false;
+
         public string MeterType
         {
             get => meterType;
@@ -282,6 +284,7 @@ namespace Omreznina.Client.Logic
                 OldEnergyPrice = MonthlyReports.Sum(m => m.OldEnergyPrice);
             }
             OldFixedPrice = MonthlyReports.Sum(m => m.OldFixedPrice);
+            FixedPowerPriceIfNo15Minute = MonthlyReports.Sum(m => m.FixedPowerPriceIfNo15Minute);
             AgreedPowerPrice = MonthlyReports.Sum(m => m.AgreedPowerPrice);
             OverdraftPowerPrice = MonthlyReports.Sum(m => m.OverdraftPowerPrice);
             for (int i = 0; i < 5; i++)
@@ -337,6 +340,7 @@ namespace Omreznina.Client.Logic
         public decimal OldEnergyPrice { get; set; }
         public decimal EnergyPrice { get; set; }
         public decimal NetMeteringEnergyInKWh { get; set; }
+        public decimal FixedPowerPriceIfNo15Minute { get; set; }
         public decimal AgreedPowerPrice { get; set; }
         public decimal OverdraftPowerPrice { get; set; }
         public decimal[] OverdraftPowerPricePerBlock { get; } = new decimal[5];
@@ -404,9 +408,21 @@ namespace Omreznina.Client.Logic
 
             if (rawUsages.Count == 0)
             {
+                if (calculationOptions.No15MinuteData)
+                {
+                    FixedPowerPriceIfNo15Minute = BlockPrices.GetCombinedPowerPriceNo15Minutes(calculationOptions);
+                }
+                else
+                {
+                    FixedPowerPriceIfNo15Minute = 0;
+                }
                 EnergyPrice = manualMonthEnergy * BlockPrices.GetCombinedEnergyPriceSingleTariffPerKWH(calculationOptions.IncludeVAT);
                 OldEnergyPrice = manualMonthEnergy * BlockPrices.GetOldEnergyPriceSingleTariffPerKWh(calculationOptions);
                 return;
+            }
+            else
+            {
+                FixedPowerPriceIfNo15Minute = 0;
             }
 
             foreach (var usage in rawUsages)

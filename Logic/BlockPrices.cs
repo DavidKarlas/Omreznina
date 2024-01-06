@@ -70,6 +70,31 @@ namespace Omreznina.Client.Logic
             }
             return price;
         }
+        internal static decimal GetCombinedPowerPriceNo15Minutes(CalculationOptions calculationOptions)
+        {
+            // Distro, transfer
+            var price = 0.14326M + 2.14808M;
+            if (calculationOptions.BreakersValue.ThreePhase)
+            {
+                if (calculationOptions.BreakersValue.PrikljucnaMoc > 17)
+                {
+                    price *= calculationOptions.BreakersValue.PrikljucnaMoc * 0.62M;
+                }
+                else
+                {
+                    price *= calculationOptions.BreakersValue.PrikljucnaMoc * 0.42M;
+                }
+            }
+            else
+            {
+                price *= calculationOptions.BreakersValue.PrikljucnaMoc * 0.58M;
+            }
+            if (calculationOptions.IncludeVAT)
+            {
+                return price * 1.22M;
+            }
+            return price;
+        }
 
         internal static decimal GetOldEnergyPriceSingleTariffPerKWh(CalculationOptions calculationOptions)
         {

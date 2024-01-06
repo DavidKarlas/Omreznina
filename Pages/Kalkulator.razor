@@ -82,11 +82,22 @@ else if (!ViewModel.ConfirmedData)
         <h1>Odpri .csv datoteko iz MojElektro.si</h1>
         <InputFile id="csvFile" OnChange="@LoadFiles" hidden multiple />
         <button class="btn m-1 btn-primary" onclick="document.getElementById('csvFile').click()">Odpri .csv datoteko iz mojelektro.si</button>
+        <Tooltip3>
+            <Text><button class="btn m-1 btn-danger">Imam dostop do mojelektro.si, vendar je "15 minutni podatki" zavihek siv</button></Text>
+            <ChildContent>
+                Če nimate novega merilnega mesta oz. števca, ki bi poročal 15 minutne odčitke so za vas pravila nekoliko drugačna. Vnesti boste morali ročno porabo po mesecih spodaj in obkjukati "Moje merilno mesto ne omogoča 15 minutnega odčitavanja".
+                Tudi možnosti izbirati moči blokov ne boste imeli, saj 14. člen "Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje" pravi, da se za merilna mesta, ki ne omogočajo 15 minutnega odčitavanja, za moč vseh blokov vzame 58% prikjučne moči če imate 1-fazen, 42% če mate 3-fazno prikjuček oz. 62% če imate več kot 17kW priklopne moči.
+            </ChildContent>
+        </Tooltip3>
         <div>
             <h2>ali</h2>
         </div>
         <h1>Vnesi porabo po mesecih</h1>
         <span>Če slučajno nimate dostopa do MojElektro.si ali pa vaše merilno mesto ne podpira 15 minutnega odčitavanja, lahko ročno vnesete porabo po mesecih.</span>
+        <div>
+            <span>Moje merilno mesto ne omogoča 15 minutnega odčitavanja</span>
+            <InputCheckbox @bind-Value="ViewModel.CalculationOptions.No15MinuteData" />
+        </div>
         <span>To žal ni tako natančen način, kot z .csv datoteko saj ne prikazuje presežkov, ampak je zelo dober približek.</span>
         <div>
             <table>
@@ -111,7 +122,7 @@ else if (!ViewModel.ConfirmedPowersPerBlock)
     <div class="d-flex flex-column min-vh-100 justify-content-center align-items-center">
         <h1>Vnos moči blokov</h1>
         <span>Če imate dostop do MojElektro.si pod zavihkom "Dogovorjena/obračunska moč" merilnega mesta lahko vidite moči blokov katere je elektro distributer izračunal na podlagi pretekle porabe.</span>
-        <span>Če nimate dostopa do MojElektro.si, lahko ta podatek dobite na elektro računu. Nekateri dobavitelji to objavijo na vseh računih npr. Petrol, nekateri pa le po zakonsko obveznih 2023 Junij-September, npr. Gen-i.</span>
+        <span>Če nimate dostopa do MojElektro.si, lahko ta podatek dobite na elektro računu. Nekateri dobavitelji to objavijo na vseh računih npr. Petrol, nekateri pa le v zakonsko obveznih mesecih junij, julij, avgust in september, npr. Gen-i.</span>
         <div>
             <Tooltip2 Text=@($"Blok 1 (kW):")>
                 <h3>Blok 1 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 0).ToEuro(4)/kWh</h3>
@@ -167,55 +178,58 @@ else
     <div class="page">
         <main>
             <div class="top-row px-4">
-                <EditForm style="margin-right:auto;" EditContext="_editContext2">
-                    <Tooltip3>
-                        <Text><b>Moči:</b></Text>
-                        <ChildContent>
-                            <h3>Dogovorjene moči po blokih</h3>
-                            <span>
-                                Dogovorjene moči po blokih so kjučna stvar pri reformi obračuna elektrike. Saj omogočajo vsakemu odjemalcu da določi koliko bo obremenjeval omrežje in temu primerno, koliko bo plačal. Prekoračitve dogovorjene moči se kaznuje s presežki.
-                            </span>
-                        </ChildContent>
-                    </Tooltip3>
+                @if (!ViewModel.CalculationOptions.No15MinuteData)
+                {
+                    <EditForm style="margin-right:auto;" EditContext="_editContext2">
+                        <Tooltip3>
+                            <Text><b>Moči:</b></Text>
+                            <ChildContent>
+                                <h3>Dogovorjene moči po blokih</h3>
+                                <span>
+                                    Dogovorjene moči po blokih so kjučna stvar pri reformi obračuna elektrike. Saj omogočajo vsakemu odjemalcu da določi koliko bo obremenjeval omrežje in temu primerno, koliko bo plačal. Prekoračitve dogovorjene moči se kaznuje s presežki.
+                                </span>
+                            </ChildContent>
+                        </Tooltip3>
 
-                    <Tooltip2 Text=@($"Blok 1({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0).ToEuro()}/kW)")>
-                        <h3>Blok 1 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 0).ToEuro(4)/kWh</h3>
-                        <span>
-                            Blok 1 je v uporabi le od novembra do februarja in sicer med 7:00 in 14:00 ter 16:00 in 20:00.
-                            To je daleč najbolj obremenjen in najdražji blok s ceno @BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0).ToEuro() na kW.
-                            To pomeni, da za dogovorjeno moč @ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0].ToKW() bo potrebno plačati v mesecih od novembra do februarja @((BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0) * ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]).ToEuro()) ne glede na količino porabljene elektrike.
-                        </span>
-                    </Tooltip2>
-                    <InputNumber step="@Power1StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
-                    <Tooltip2 Text=@($"Blok 2({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 1).ToEuro()}/kW)")>
-                        <h3>Blok 2 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 1).ToEuro(4)/kWh</h3>
-                        <span>
-                            Blok bla bla.
-                        </span>
-                    </Tooltip2>
-                    <InputNumber step="@Power2StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
-                    <Tooltip2 Text=@($"Blok 3({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 2).ToEuro()}/kW)")>
-                        <h3>Blok 3 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 2).ToEuro(4)/kWh</h3>
-                        <span>
-                            Blok bla bla.
-                        </span>
-                    </Tooltip2>
-                    <InputNumber step="@Power3StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
-                    <Tooltip2 Text=@($"Blok 4({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 3).ToEuro()}/kW)")>
-                        <h3>Blok 4 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 3).ToEuro(4)/kWh</h3>
-                        <span>
-                            Blok bla bla.
-                        </span>
-                    </Tooltip2>
-                    <InputNumber step="@Power4StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
-                    <Tooltip2 Text=@($"Blok 5({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 4).ToEuro()}/kW)")>
-                        <h3>Blok 5 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 4).ToEuro(4)/kWh</h3>
-                        <span>
-                            Blok bla bla.
-                        </span>
-                    </Tooltip2>
-                    <InputNumber step="@Power5StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
-                </EditForm>
+                        <Tooltip2 Text=@($"Blok 1({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0).ToEuro()}/kW)")>
+                            <h3>Blok 1 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 0).ToEuro(4)/kWh</h3>
+                            <span>
+                                Blok 1 je v uporabi le od novembra do februarja in sicer med 7:00 in 14:00 ter 16:00 in 20:00.
+                                To je daleč najbolj obremenjen in najdražji blok s ceno @BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0).ToEuro() na kW.
+                                To pomeni, da za dogovorjeno moč @ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0].ToKW() bo potrebno plačati v mesecih od novembra do februarja @((BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0) * ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]).ToEuro()) ne glede na količino porabljene elektrike.
+                            </span>
+                        </Tooltip2>
+                        <InputNumber step="@Power1StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
+                        <Tooltip2 Text=@($"Blok 2({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 1).ToEuro()}/kW)")>
+                            <h3>Blok 2 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 1).ToEuro(4)/kWh</h3>
+                            <span>
+                                Blok bla bla.
+                            </span>
+                        </Tooltip2>
+                        <InputNumber step="@Power2StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
+                        <Tooltip2 Text=@($"Blok 3({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 2).ToEuro()}/kW)")>
+                            <h3>Blok 3 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 2).ToEuro(4)/kWh</h3>
+                            <span>
+                                Blok bla bla.
+                            </span>
+                        </Tooltip2>
+                        <InputNumber step="@Power3StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
+                        <Tooltip2 Text=@($"Blok 4({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 3).ToEuro()}/kW)")>
+                            <h3>Blok 4 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 3).ToEuro(4)/kWh</h3>
+                            <span>
+                                Blok bla bla.
+                            </span>
+                        </Tooltip2>
+                        <InputNumber step="@Power4StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
+                        <Tooltip2 Text=@($"Blok 5({BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 4).ToEuro()}/kW)")>
+                            <h3>Blok 5 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 4).ToEuro(4)/kWh</h3>
+                            <span>
+                                Blok bla bla.
+                            </span>
+                        </Tooltip2>
+                        <InputNumber step="@Power5StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
+                    </EditForm>
+                }
 
                 <button onclick="@EditSettings" class="btn btn-primary m-2" data-toggle="tooltip" data-placement="bottom" title="Uredi podatke o merilnem mestu">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear-fill" viewBox="0 0 16 16">

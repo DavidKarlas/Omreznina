@@ -138,7 +138,7 @@ namespace Omreznina.Logic
 
         public void Update(OmrezninaReport mainReport)
         {
-            var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.OldFixedPrice + x.OldEnergyPrice, x.AgreedPowerPrice + x.EnergyPrice + x.OverdraftPowerPrice));
+            var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.OldFixedPrice + x.OldEnergyPrice, x.FixedPowerPriceIfNo15Minute + x.AgreedPowerPrice + x.EnergyPrice + x.OverdraftPowerPrice));
             var roundedMaxY = Math.Floor(maxY / 50.0) * 50.0 + 65.0;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
@@ -158,7 +158,14 @@ namespace Omreznina.Logic
             }
             oldFixedPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldFixedPrice).ToArray());
             oldEnergyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldEnergyPrice).ToArray());
-            agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
+            if(mainReport.CalculationOptions.No15MinuteData)
+            {
+                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
+            }
+            else
+            {
+                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
+            }
             energyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
             overdraftPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());
             zeros.SyncCollections(new decimal[mainReport.MonthlyReports.Length]);

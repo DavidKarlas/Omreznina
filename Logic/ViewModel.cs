@@ -12,6 +12,7 @@ namespace Omreznina.Logic
         public async Task LoadCSVs(List<Stream> csvStreams)
         {
             rawUsages = await OmrezninaReport.ParseRawUsages(csvStreams);
+            CalculationOptions.No15MinuteData = false;
             ConfirmedData = true;
             UpdateGraphs();
         }

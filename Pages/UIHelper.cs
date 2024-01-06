@@ -5,22 +5,44 @@ namespace Omreznina.Client.Pages
 {
     public static class UIHelper
     {
-        public static string MonthConverter(int month)
+        public static string MonthConverter(int month, bool shortVersion)
         {
-            switch (month)
+            if (shortVersion)
             {
-                case 1: return "Jan";
-                case 2: return "Feb";
-                case 3: return "Mar";
-                case 4: return "Apr";
-                case 5: return "Maj";
-                case 6: return "Jun";
-                case 7: return "Jul";
-                case 8: return "Avg";
-                case 9: return "Sep";
-                case 10: return "Oct";
-                case 11: return "Nov";
-                case 12: return "Dec";
+                switch (month)
+                {
+                    case 1: return "Jan";
+                    case 2: return "Feb";
+                    case 3: return "Mar";
+                    case 4: return "Apr";
+                    case 5: return "Maj";
+                    case 6: return "Jun";
+                    case 7: return "Jul";
+                    case 8: return "Avg";
+                    case 9: return "Sep";
+                    case 10: return "Oct";
+                    case 11: return "Nov";
+                    case 12: return "Dec";
+                }
+            }
+            else
+            {
+
+                switch (month)
+                {
+                    case 1: return "Januar";
+                    case 2: return "Februar";
+                    case 3: return "Marec";
+                    case 4: return "April";
+                    case 5: return "Maj";
+                    case 6: return "Junij";
+                    case 7: return "Julij";
+                    case 8: return "Avgust";
+                    case 9: return "September";
+                    case 10: return "October";
+                    case 11: return "November";
+                    case 12: return "December";
+                }
             }
             return "N/A";
         }

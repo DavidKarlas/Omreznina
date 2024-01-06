@@ -144,7 +144,7 @@ namespace Omreznina.Logic
             {
                 YAxis[0].MaxLimit = roundedMaxY;
             }
-            months.SyncCollections(mainReport.MonthlyReports.Select(x => UIHelper.MonthConverter(x.Month.Month)).ToArray());
+            months.SyncCollections(mainReport.MonthlyReports.Select(x => UIHelper.MonthConverter(x.Month.Month, true)).ToArray());
             if (!selectMonth.HasValue || selectMonth >= months.Count)
             {
                 var indexOfFirstMonthWithOverdraft = Array.IndexOf(mainReport.MonthlyReports, mainReport.MonthlyReports.FirstOrDefault(m => m.OverdraftPowerPrice > 0));

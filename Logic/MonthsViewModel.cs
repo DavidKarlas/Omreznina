@@ -164,7 +164,7 @@ namespace Omreznina.Logic
             }
             else
             {
-                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
+                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
             }
             energyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
             overdraftPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());

@@ -135,10 +135,13 @@ namespace Omreznina.Logic
                 IsVisible = false;
                 return;
             }
-            if(!IsVisible)
+            if (!IsVisible)
             {
                 IsVisible = true;
             }
+
+            Title.Text = $"{UIHelper.MonthConverter(monthReport.Month.Month, false)} - {monthReport.Month.Year}";
+
             days.SyncCollections(allDays.Select(d => d.Day.Day.ToString()).ToArray());
             var maxY = (double)allDays.Max(x => x.EnergyPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
             var roundedMaxY = Math.Round(maxY * 1.25) + 1;

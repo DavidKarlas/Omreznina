@@ -100,6 +100,7 @@ namespace Omreznina.Logic
                 return;
             }
             IsVisible = true;
+            Title.Text = $"15 minutni odčitki za {dayReport.Day:dd.MM.yyyy}";
             timesOfDay.SyncCollections(dayReport.Usages.Select(u => u.Source.DateTime.Minute == 0 ? u.Source.DateTime.ToString("HH:mm") : "").ToArray());
             overdraftPrice.SyncCollections(dayReport.Usages.Select(u => u.OverdraftPrice).ToArray());
             actualPower.SyncCollections(dayReport.Usages.Select(u => u.Source.ConsumedPower).ToArray());

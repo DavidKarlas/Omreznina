@@ -55,6 +55,11 @@ namespace Omreznina.Client.Logic
         {
             get => connectionType; set
             {
+                if (connectionType != value)
+                {
+                    connectionType = value;
+                    VrstaOdjema = OldPriceList[value].Keys.First();
+                }
                 connectionType = value;
                 UserGroup = int.Parse(value.Substring(value.Length - 1));
             }
@@ -219,15 +224,7 @@ namespace Omreznina.Client.Logic
             set
             {
                 breakersText = value;
-                if (MeterType == "Ostalo")
-                {
-                    AgreedMaxPowerBlocks.SetVarovalkePower(999, true, ObracunskaMoc);
-                }
-                else
-                {
-                    ObracunskaMoc = BreakersValue.ObracunskaMoc;
-                    AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue.PrikljucnaMoc, BreakersValue.ThreePhase, ObracunskaMoc);
-                }
+                ObracunskaMoc = BreakersValue.ObracunskaMoc;
             }
         }
         public int ObracunskaMoc
@@ -235,6 +232,14 @@ namespace Omreznina.Client.Logic
             get => obracunskaMoc; set
             {
                 obracunskaMoc = value;
+                if (MeterType == "Ostalo")
+                {
+                    AgreedMaxPowerBlocks.SetVarovalkePower(999, true, ObracunskaMoc);
+                }
+                else
+                {
+                    AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue.PrikljucnaMoc, BreakersValue.ThreePhase, ObracunskaMoc);
+                }
             }
         }
         public (int ObracunskaMoc, int PrikljucnaMoc, bool ThreePhase) BreakersValue

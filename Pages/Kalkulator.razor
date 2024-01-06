@@ -421,6 +421,11 @@ else
     private void ConfirmManualEnergy()
     {
         ViewModel.ConfirmedData = true;
+        if (ViewModel.CalculationOptions.No15MinuteData)
+        {
+            // Skip that part of wizard if can't set powers...
+            ViewModel.ConfirmedPowersPerBlock = true;
+        }
         ViewModel.UpdateGraphs();
     }
 

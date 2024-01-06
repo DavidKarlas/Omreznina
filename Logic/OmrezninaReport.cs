@@ -375,7 +375,14 @@ namespace Omreznina.Client.Logic
                     if (i == 0)
                         continue;
                 }
-                AgreedPowerPricePerBlock[i] = calculationOptions.AgreedMaxPowerBlocks[i] * BlockPrices.GetCombinedPowerPricePerKW(calculationOptions, i);
+                if (calculationOptions.No15MinuteData)
+                {
+                    AgreedPowerPricePerBlock[i] = 0;
+                }
+                else
+                {
+                    AgreedPowerPricePerBlock[i] = calculationOptions.AgreedMaxPowerBlocks[i] * BlockPrices.GetCombinedPowerPricePerKW(calculationOptions, i);
+                }
             }
             AgreedPowerPrice = AgreedPowerPricePerBlock.Sum();
             OldFixedPrice = calculationOptions.ObracunskaMoc * BlockPrices.GetFixedPricePerKW(calculationOptions);

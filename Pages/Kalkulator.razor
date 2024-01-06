@@ -83,7 +83,7 @@ else if (!ViewModel.ConfirmedData)
         <InputFile id="csvFile" OnChange="@LoadFiles" hidden multiple />
         <button class="btn m-1 btn-primary" onclick="document.getElementById('csvFile').click()">Odpri .csv datoteko iz mojelektro.si</button>
         <Tooltip3>
-            <Text><button class="btn m-1 btn-danger">Imam dostop do mojelektro.si, vendar je "15 minutni podatki" zavihek siv</button></Text>
+            <Text><button onclick="@IHaveAccessButNo15Minutes" class="btn m-1 btn-danger">Imam dostop do mojelektro.si, vendar je "15 minutni podatki" zavihek siv</button></Text>
             <ChildContent>
                 Če nimate novega merilnega mesta oz. števca, ki bi poročal 15 minutne odčitke so za vas pravila nekoliko drugačna. Vnesti boste morali ročno porabo po mesecih spodaj in obkjukati "Moje merilno mesto ne omogoča 15 minutnega odčitavanja".
                 Tudi možnosti izbirati moči blokov ne boste imeli, saj 14. člen "Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje" pravi, da se za merilna mesta, ki ne omogočajo 15 minutnega odčitavanja, za moč vseh blokov vzame 58% prikjučne moči če imate 1-fazen, 42% če mate 3-fazno prikjuček oz. 62% če imate več kot 17kW priklopne moči.
@@ -422,6 +422,11 @@ else
     {
         ViewModel.ConfirmedData = true;
         ViewModel.UpdateGraphs();
+    }
+
+    private void IHaveAccessButNo15Minutes()
+    {
+        ViewModel.CalculationOptions.No15MinuteData = true;
     }
 
     private void ConfirmPowersPerBlock()

@@ -8,22 +8,22 @@ namespace Omreznina.Client.Logic
 {
     public class CalculationOptions
     {
-        public static (string Text, int ObracunskaMoc, int PrikljucnaMoc, bool ThreePhase)[] AllBreakersOptions =
+        public static (string Text, int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikljucnaMoc, bool ThreePhase)[] AllBreakersOptions =
              [
-            ("3kW (1x16 A)", 3, 4, false),
-            ("3kW (1x20 A)", 3, 5, false),
-            ("6kW (1x25 A)", 6, 6, false),
-            ("7kW (1x32 A)", 7, 7, false),
-            ("7kW (1x35 A)", 7, 8, false),
+            ("3kW (1x16 A)", 3, 3, 4, false),
+            ("3kW (1x20 A)", 3, 5, 5, false),
+            ("6kW (1x25 A)", 6, 6, 6, false),
+            ("7kW (1x32 A)", 7, 7, 7, false),
+            ("7kW (1x35 A)", 7, 8, 8, false),
 
-            ("7kW (3x16 A)", 7, 11  , true),
-            ("7kW (3x20 A)", 7, 14  , true),
-            ("10kW (3x25 A)", 10, 17, true),
-            ("22kW (3x32 A)", 22, 22, true),
-            ("24kW (3x35 A)", 24, 24, true),
-            ("28kW (3x40 A)", 28, 28, true),
-            ("35kW (3x50 A)", 35, 35, true),
-            ("43kW (3x63 A)", 43, 43, true)
+            ("7kW (3x16 A)", 7, 11, 11  , true),
+            ("7kW (3x20 A)", 7, 14, 14  , true),
+            ("10kW (3x25 A)", 10, 17, 17, true),
+            ("22kW (3x32 A)", 22, 22, 22, true),
+            ("24kW (3x35 A)", 24, 24, 24, true),
+            ("28kW (3x40 A)", 28, 28, 28, true),
+            ("35kW (3x50 A)", 35, 35, 35, true),
+            ("43kW (3x63 A)", 43, 43, 43, true)
             ];
 
         public bool No15MinuteData { get; set; } = false;
@@ -37,11 +37,14 @@ namespace Omreznina.Client.Logic
                 {
                     ConnectionType = "Nizka napetost(NN), uporabniška skupina 0";
                     VrstaOdjema = "Gospodinjstvo";
+                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
+
                 }
                 else if (AllMeterTypes[1] == value)
                 {
                     ConnectionType = "Nizka napetost(NN), uporabniška skupina 0";
                     VrstaOdjema = "Brez merjenja moči";
+                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
                 }
                 else
                 {
@@ -104,7 +107,7 @@ namespace Omreznina.Client.Logic
             }
         };
 
-        private Dictionary<string, (int ObracunskaMoc, int PrikjucnaMoc, bool ThreePhase)> MappedPowerBreakers;
+        private Dictionary<string, (int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikjucnaMoc, bool ThreePhase)> MappedPowerBreakers;
 
         public class AgreedPowerBlocks : ObservableCollection<decimal>
         {
@@ -224,7 +227,14 @@ namespace Omreznina.Client.Logic
             set
             {
                 breakersText = value;
-                ObracunskaMoc = BreakersValue.ObracunskaMoc;
+                if (meterType == "Gospodinjstvo")
+                {
+                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
+                }
+                else
+                {
+                    ObracunskaMoc = BreakersValue.ObracunskaMocMalaPodjetja;
+                }
             }
         }
         public int ObracunskaMoc
@@ -242,9 +252,9 @@ namespace Omreznina.Client.Logic
                 }
             }
         }
-        public (int ObracunskaMoc, int PrikljucnaMoc, bool ThreePhase) BreakersValue
+        public (int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikljucnaMoc, bool ThreePhase) BreakersValue
         {
-            get => breakersText == null ? (0, 0, false) : MappedPowerBreakers.TryGetValue(breakersText, out var val) ? val : (0, 0, false);
+            get => breakersText == null ? (0, 0, 0, false) : MappedPowerBreakers.TryGetValue(breakersText, out var val) ? val : (0, 0, 0, false);
         }
 
         public string? TwoTariffSystemText { get; set; } = null;
@@ -253,7 +263,7 @@ namespace Omreznina.Client.Logic
 
         public CalculationOptions()
         {
-            MappedPowerBreakers = AllBreakersOptions.ToDictionary(v => v.Text, v => (v.ObracunskaMoc, v.PrikljucnaMoc, v.ThreePhase));
+            MappedPowerBreakers = AllBreakersOptions.ToDictionary(v => v.Text, v => (v.ObracunskaMocGospodinjstva, v.ObracunskaMocMalaPodjetja, v.PrikljucnaMoc, v.ThreePhase));
             AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue.PrikljucnaMoc, BreakersValue.ThreePhase, ObracunskaMoc);
         }
     }

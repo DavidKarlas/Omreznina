@@ -29,7 +29,7 @@
             <div>
                 <span>Moč varovalk oz. obračunske moči, to lahko poiščete na elektro računu ali na <a href="https://mojelektro.si">mojelektro.si</a> v zavihku "Podrobnosti MM":</span>
                 <InputSelect @bind-Value="ViewModel.CalculationOptions.BreakersText">
-                    @foreach (var (text, _, _, _) in CalculationOptions.AllBreakersOptions.Prepend(("", 0, 0, false)))
+                    @foreach (var (text, _, _, _, _) in CalculationOptions.AllBreakersOptions.Prepend(("", 0, 0, 0, false)))
                     {
                         <option value="@text">@text</option>
                     }

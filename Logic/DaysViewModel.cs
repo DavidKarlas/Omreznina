@@ -92,6 +92,11 @@ namespace Omreznina.Logic
                 DataLabelsPaint = new SolidColorPaint(new SKColor(240, 240, 240)),
                 DataLabelsPosition = DataLabelsPosition.Middle,
                 YToolTipLabelFormatter = point => point.Model.ToEuro(),
+                XToolTipLabelFormatter = point => new DateTime(
+                    previouslySelectedMonth.Month.Year,
+                    previouslySelectedMonth.Month.Month,
+                    point.Index + 1
+                ).ToString("dddd d.MMM"),
                 Fill = color
             };
         }

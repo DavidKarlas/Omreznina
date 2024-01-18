@@ -51,6 +51,7 @@ namespace Omreznina.Client.Pages
         public const string EuroConverterHideZero = "function(value, opts) { if (value == 0) return ''; var num = Number(value); return (num%1==0?num.toFixed(0):num.toFixed(2)) + ' €';}";
 
         public static string ToEuro(this decimal value, int decimals = 2) =>decimals==2? $"{value:0.00}€": $"{value:0.00000}€";
+        public static string ToEuro(this double value, int decimals = 2) =>decimals==2? $"{value:0.00}€": $"{value:0.00000}€";
         public static string ToEuroPreferFullNumber(this decimal value) => value % 1 == 0 ? $"{value:0}€" : $"{value:0.00}€";
         public static string ToKW(this decimal value) => $"{value:0.00} kW";
         public static string ToKW(this double value) => $"{value:0.00} kW";

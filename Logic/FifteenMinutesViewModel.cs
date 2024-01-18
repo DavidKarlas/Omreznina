@@ -15,11 +15,7 @@ namespace Omreznina.Logic
 {
     public class FifteenMinutesViewModel
     {
-        private readonly ObservableCollection<string> timesOfDay = new();
-        private readonly ObservableCollection<decimal> overdraftPrice = new();
-        private readonly ObservableCollection<decimal> agreedPower = new();
-        private readonly ObservableCollection<decimal> actualPower = new();
-        private readonly ObservableCollection<decimal> returnPower = new();
+        private readonly ObservableCollection<CalculatedUsage> usages = new();
 
         public ISeries[] Series { get; }
         public Axis[] XAxis { get; }
@@ -36,9 +32,10 @@ namespace Omreznina.Logic
         public FifteenMinutesViewModel()
         {
             Series = [
-                new LineSeries<decimal>{
-                     XToolTipLabelFormatter = value => TimeOnly.FromTimeSpan(TimeSpan.FromMinutes(value.Index * 15)).ToString("HH:mm"),
-                     Values = actualPower,
+                new LineSeries<CalculatedUsage>{
+                     XToolTipLabelFormatter = value => FormatTime(value.Coordinate.SecondaryValue).ToString("HH:mm"),
+                    Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.ConsumedPower),
+                    Values = usages,
                      Stroke="#00A9FF".ToPaint(4),
                      Fill=null,
                      GeometrySize=0,
@@ -47,8 +44,9 @@ namespace Omreznina.Logic
                      ScalesYAt=1,
                      Name = "Dejanska moč"
                 },
-                new LineSeries<decimal>{
-                     Values = returnPower,
+                new LineSeries<CalculatedUsage>{
+                     Values = usages,
+                     Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.GivenPower),
                      Stroke="#00e600".ToPaint(4),
                      Fill=null,
                      GeometrySize=0,
@@ -57,15 +55,16 @@ namespace Omreznina.Logic
                      ScalesYAt=1,
                      Name = "Višek samoproizvodnje"
                 },
-               new ColumnSeries<decimal>
+               new ColumnSeries<CalculatedUsage>
                {
-                    Values = overdraftPrice,
+                    Values = usages,
+                    Mapping = (usage, index) => new Coordinate(index, (double)usage.OverdraftPrice),
                     Stroke = null,
                     Fill = UIHelper.OverdraftColor,
                     ScalesYAt=0,
                     DataLabelsPaint="#151515".ToPaint(),
                     DataLabelsPosition = DataLabelsPosition.Middle,
-                    DataLabelsFormatter = point => point.Model==0 ? "": point.Model.ToEuro(),
+                    DataLabelsFormatter = point => point.PrimaryValue==0 ? "": point.PrimaryValue.ToEuro(),
                     Name = "Prekoračitev",
                     DataLabelsSize=12,
                     DataLabelsRotation=90,
@@ -73,9 +72,7 @@ namespace Omreznina.Logic
                 }
                 ];
             XAxis = [new Axis {
-                Labels = timesOfDay,
-                MinLimit=0,
-                MaxLimit=95,
+                Labeler = value => FormatTime(value).ToStringFullHours(),
                 Padding= new LiveChartsCore.Drawing.Padding(-15,0,-15,0)
             }];
             YAxis = [new Axis {
@@ -83,15 +80,23 @@ namespace Omreznina.Logic
                 ShowSeparatorLines=false,
                 Position= AxisPosition.End,
                 Labeler = value => ((decimal)value).ToEuroPreferFullNumber()
-            },
-            new Axis{
-                MinLimit=0,
-                Labeler= value => ((decimal)value).ToKW()
-            }];
+                },
+                new Axis{
+                    MinLimit=0,
+                    Labeler= value => ((decimal)value).ToKW()
+                }];
+        }
+
+        TimeOnly FormatTime(double index)
+        {
+            var extraHour = this.extraHour * -4;
+            if (index < 3 * 4)
+                extraHour = 0;
+            return TimeOnly.FromTimeSpan(TimeSpan.FromMinutes((index + extraHour) * 15));
         }
 
         public bool IsVisible { get; set; } = false;
-
+        int extraHour = 0;
         public void Update(CalculationOptions options, DayReport? dayReport)
         {
             if (dayReport == null)
@@ -101,27 +106,39 @@ namespace Omreznina.Logic
             }
             IsVisible = true;
             Title.Text = $"15 minutni odčitki za {dayReport.Day:dd.MM.yyyy}";
-            timesOfDay.SyncCollections(dayReport.Usages.Select(u => u.Source.DateTime.Minute == 0 ? u.Source.DateTime.ToString("HH:mm") : "").ToArray());
-            overdraftPrice.SyncCollections(dayReport.Usages.Select(u => u.OverdraftPrice).ToArray());
-            actualPower.SyncCollections(dayReport.Usages.Select(u => u.Source.ConsumedPower).ToArray());
-            returnPower.SyncCollections(dayReport.Usages.Select(u => u.Source.GivenPower).ToArray());
+            usages.SyncCollections(dayReport.Usages);
             var maxPower = dayReport.Usages.Max(u => Math.Max(u.Source.ConsumedPower, u.Source.GivenPower));
             var visuals = new List<GeometryVisual<RectangleGeometry>>();
             var lowBlock = dayReport.Usages[0].Source.Block;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[lowBlock]);
-            var mediumBlock = dayReport.Usages[6 * 4].Source.Block;
+            var mediumBlock = lowBlock - 1;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[mediumBlock]);
-            var highBlock = dayReport.Usages[7 * 4].Source.Block;
+            var highBlock = mediumBlock - 1;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[highBlock]);
             YAxis[1].MaxLimit = Math.Round((double)maxPower + 2);
+            if (dayReport.Usages.Count == 4 * 25)
+            {
+                extraHour = 1;
+                XAxis[0].MaxLimit = 25 * 4;
+            }
+            else if (dayReport.Usages.Count == 4 * 23)
+            {
+                extraHour = -1;
+                XAxis[0].MaxLimit = 23 * 4;
+            }
+            else
+            {
+                extraHour = 0;
+                XAxis[0].MaxLimit = 24 * 4;
+            }
             VisualElements = [
-                CreateBlockVisual(lowBlock, options, 0, 6),
-                CreateBlockVisual(mediumBlock, options, 6, 7),
-                CreateBlockVisual(highBlock, options, 7, 14),
-                CreateBlockVisual(mediumBlock, options, 14, 16),
-                CreateBlockVisual(highBlock, options, 16, 20),
-                CreateBlockVisual(mediumBlock, options, 20, 22),
-                CreateBlockVisual(lowBlock, options, 22, 24)
+                CreateBlockVisual(lowBlock, options, 0, 6 + extraHour),
+                CreateBlockVisual(mediumBlock, options, 6 + extraHour, 7 + extraHour),
+                CreateBlockVisual(highBlock, options, 7 + extraHour, 14 + extraHour),
+                CreateBlockVisual(mediumBlock, options, 14 + extraHour, 16 + extraHour),
+                CreateBlockVisual(highBlock, options, 16 + extraHour, 20 + extraHour),
+                CreateBlockVisual(mediumBlock, options, 20 + extraHour, 22 + extraHour),
+                CreateBlockVisual(lowBlock, options, 22 + extraHour, 24 + extraHour)
                 ];
         }
 
@@ -133,7 +150,7 @@ namespace Omreznina.Logic
                 X = startHour * 4,
                 Y = blockPowerKW,
                 LocationUnit = MeasureUnit.ChartValues,
-                Width = (endHour - startHour) * 4 - (endHour == 24 ? 1 : 0),
+                Width = (endHour - startHour) * 4 - (endHour >= 24 ? 1 : 0),
                 Height = blockPowerKW,
                 SizeUnit = MeasureUnit.ChartValues,
                 ScalesXAt = 0,

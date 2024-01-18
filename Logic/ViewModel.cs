@@ -39,7 +39,7 @@ namespace Omreznina.Logic
             MonthsViewModel.Update(mainReport);
             AllCategoriesViewModel.Update(mainReport);
             DaysViewModel.Update(mainReport.MonthlyReports[MonthsViewModel.SelectMonth]);
-            FifteenMinutesViewModel.Update(CalculationOptions, DaysViewModel.SelectedDay);
+            FifteenMinutesViewModel.Update(CalculationOptions, mainReport.MonthlyReports[MonthsViewModel.SelectMonth].DailyReports.FirstOrDefault(d => d.Value.IsSelected).Value);
         }
     }
 }

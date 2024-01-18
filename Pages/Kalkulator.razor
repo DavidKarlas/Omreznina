@@ -289,6 +289,7 @@ else
                                     @ref=dailyChart
                                     Title="ViewModel.DaysViewModel.Title"
                                     OnPointerDownCallback="OnDailyPointerDown"
+                                    AnimationsSpeed="TimeSpan.FromTicks(0)"
                                     XAxes="ViewModel.DaysViewModel.XAxis"
                                     YAxes="ViewModel.DaysViewModel.YAxis">
                     </CartesianChart>
@@ -364,7 +365,7 @@ else
         var p = new LvcPoint(e.OffsetX, e.OffsetY);
         var point = dailyChart.GetPointsAt(p).FirstOrDefault();
         if (point != null)
-            ViewModel.DaysViewModel.SelectDay(point.Index);
+            ViewModel.DaysViewModel.SelectDay(point.Context.DataSource as DayReport);
         ViewModel.UpdateGraphs(true);
     }
 

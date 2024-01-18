@@ -5,7 +5,15 @@ namespace Omreznina
 {
     public static class Extensions
     {
-        public static void SyncCollections<T>(this ObservableCollection<T> observable, IList<T> newCollection) where T : IEquatable<T>
+        public static string ToStringFullHours(this TimeOnly timeSpan)
+        {
+            if (timeSpan.Minute == 0)
+                return $"{timeSpan:HH:mm}";
+            else
+                return $"";
+        }
+
+        public static void SyncCollections<T>(this ObservableCollection<T> observable, IList<T> newCollection)
         {
             for (int i = 0; i < newCollection.Count && i < observable.Count; i++)
             {

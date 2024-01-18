@@ -368,6 +368,7 @@ namespace Omreznina.Client.Logic
         public DateOnly Day { get; init; }
         public List<CalculatedUsage> Usages { get; } = new();
         public int Index { get; internal set; }
+        public bool IsSelected { get; internal set; }
     }
 
     public class MonthlyReport : PeriodReport

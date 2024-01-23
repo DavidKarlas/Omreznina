@@ -1,0 +1,9 @@
+﻿@using Omreznina.Components
+@using Omreznina.Logic
+@inject ViewModel ViewModel
+<div class="d-flex flex-column  mt-3 justify-content-center align-items-center">
+    <h1>Nastavitve izračuna</h1>
+    <span>Ali želite v izračun vključi DDV?</span>
+    <YesNoRadioButtonComponent @bind-Value="ViewModel.CalculationOptions.IncludeVAT" />
+    <NavigationButtonsComponent />
+</div>

@@ -1,0 +1,27 @@
+﻿@using Omreznina.Logic
+@inject ViewModel ViewModel
+<div>
+    @if (!ViewModel.EnteredCalculatorOnce)
+    {
+        <button onclick="@BackButton" class="btn m-2 btn-secondary">Nazaj</button>
+    }
+    <button onclick="@NextButton" class="btn m-2 btn-primary">@NextButtonText</button>
+</div>
+@code {
+    [Parameter]
+    public Func<bool>? ValidateNextButton { get; set; } = null;
+
+    private void BackButton()
+    {
+        ViewModel.PreviousPage();
+    }
+    private void NextButton()
+    {
+        if (ValidateNextButton != null && ValidateNextButton() == false)
+        {
+            return;
+        }
+        ViewModel.NextPage();
+    }
+    private string NextButtonText { get => ViewModel.EnteredCalculatorOnce ? "Potrdi" : "Naprej"; }
+}

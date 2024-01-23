@@ -1,0 +1,40 @@
+﻿@using Omreznina.Components
+@using Omreznina.Logic
+@inject ViewModel ViewModel
+
+<div class="d-flex flex-column  mt-3 justify-content-center align-items-center">
+    <h1>Cena eletrične energije</h1>
+    <span>Ali želite v izračun vkjučiti tudi ceno električne energije?</span>
+    <div>
+        <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.IncludeEnergyPrice?"active":"")">
+            <input type="radio"
+                   name="includeEnergyPrice"
+                   checked="@(ViewModel.CalculationOptions.IncludeEnergyPrice)"
+                   @onchange="@(() => ViewModel.CalculationOptions.IncludeEnergyPrice = true)" />
+            Da
+        </label>
+        <label class="m-1 btn btn-outline-primary @(!ViewModel.CalculationOptions.IncludeEnergyPrice?"active":"")">
+            <input type="radio"
+                   name="includeEnergyPrice"
+                   checked="@(!ViewModel.CalculationOptions.IncludeEnergyPrice)"
+                   @onchange="@(() => ViewModel.CalculationOptions.IncludeEnergyPrice = false)" />
+            Ne
+        </label>
+    </div>
+    @if (ViewModel.CalculationOptions.IncludeEnergyPrice)
+    {
+        @if (ViewModel.CalculationOptions.TwoTariffSystem)
+        {
+            <span>Cena višje tarife(brez DDV):</span>
+            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.HighTariffEnergyPrice" />
+            <span>Cena nižje tarife(brez DDV):</span>
+            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.LowTariffEnergyPrice" />
+        }
+        else
+        {
+            <span>Cena enotne tarife(brez DDV):</span>
+            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.SingleTariffEnergyPrice" />
+        }
+    }
+    <NavigationButtonsComponent />
+</div>

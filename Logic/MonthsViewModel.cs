@@ -18,9 +18,10 @@ namespace Omreznina.Logic
     {
         private readonly ObservableCollection<string> months = new();
         private readonly ObservableCollection<decimal> oldFixedPrice = new();
-        private readonly ObservableCollection<decimal> oldEnergyPrice = new();
-        private readonly ObservableCollection<decimal> agreedPowerPrice = new();
+        private readonly ObservableCollection<decimal> oldEnergyTransportPrice = new();
         private readonly ObservableCollection<decimal> energyPrice = new();
+        private readonly ObservableCollection<decimal> agreedPowerPrice = new();
+        private readonly ObservableCollection<decimal> energyTransferPrice = new();
         private readonly ObservableCollection<decimal> overdraftPrice = new();
         private readonly ObservableCollection<decimal> zeros = new();
         private readonly ObservableCollection<decimal> selected = new();
@@ -52,19 +53,19 @@ namespace Omreznina.Logic
                 Labeler = value => ((decimal)value).ToEuroPreferFullNumber()
             }];
             Series = [
-
-        new ColumnSeries<decimal>
-        {
-            IsHoverable = false, // disables the series from the tooltips // mark
-            Values = selected,
-            Stroke = null,
-            Fill =new SolidColorPaint( "#2196f3".ToPaint().Color.WithAlpha(170),0),
-            IgnoresBarPosition = true,
-            MaxBarWidth=int.MaxValue,
-            IsVisibleAtLegend = false
-        },
-                    CreateStackedColumn("Star obračun: Obračunska moč", 0, UIHelper.OldFixedColor, oldFixedPrice),
-                    CreateStackedColumn("Star obračun: Energija", 0, UIHelper.OldEnergyColor, oldEnergyPrice),
+                    new ColumnSeries<decimal>
+                    {
+                        IsHoverable = false, // disables the series from the tooltips // mark
+                        Values = selected,
+                        Stroke = null,
+                        Fill =new SolidColorPaint( "#2196f3".ToPaint().Color.WithAlpha(170),0),
+                        IgnoresBarPosition = true,
+                        MaxBarWidth=int.MaxValue,
+                        IsVisibleAtLegend = false
+                    },
+                    CreateStackedColumn("Star obračun: Omrež. Moč", 0, UIHelper.AgreedPowerColor, oldFixedPrice, true),
+                    CreateStackedColumn("Star obračun: Omrež. Poraba", 0, UIHelper.EnergyTransferColor, oldEnergyTransportPrice, true),
+                    CreateStackedColumn("Energija", 0, UIHelper.EnergyColor, energyPrice, true),
                     new StackedColumnSeries<decimal>
                     {
                         IsVisibleAtLegend = false,
@@ -79,8 +80,9 @@ namespace Omreznina.Logic
                         YToolTipLabelFormatter = point => ((decimal)point.StackedValue.Total).ToEuro(),
                         MaxBarWidth = 55
                     },
-                    CreateStackedColumn("Dogovorjeno", 1, UIHelper.AgreedPowerColor, agreedPowerPrice),
-                    CreateStackedColumn("Energija", 1, UIHelper.EnergyTransferColor, energyPrice),
+                    CreateStackedColumn("Omrež. moč", 1, UIHelper.AgreedPowerColor, agreedPowerPrice),
+                    CreateStackedColumn("Omrež. poraba", 1, UIHelper.EnergyTransferColor, energyTransferPrice),
+                    CreateStackedColumn("Energija", 1, UIHelper.EnergyColor, energyPrice),
                     CreateStackedColumn("Prekoračitev", 1, UIHelper.OverdraftColor, overdraftPrice),
                     new StackedColumnSeries<decimal>
                     {
@@ -99,7 +101,7 @@ namespace Omreznina.Logic
                 ];
         }
 
-        private StackedColumnSeries<decimal> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<decimal> values)
+        private StackedColumnSeries<decimal> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<decimal> values, bool hideLegend = false)
         {
             return new StackedColumnSeries<decimal> {
                 Name = name,
@@ -117,6 +119,7 @@ namespace Omreznina.Logic
                 DataLabelsPaint = new SolidColorPaint(new SKColor(240, 240, 240)),
                 DataLabelsPosition = DataLabelsPosition.Middle,
                 YToolTipLabelFormatter = point => point.Model.ToEuro(),
+                IsVisibleAtLegend = !hideLegend,
                 Fill = color
             };
         }
@@ -138,7 +141,7 @@ namespace Omreznina.Logic
 
         public void Update(OmrezninaReport mainReport)
         {
-            var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.OldFixedPrice + x.OldEnergyPrice, x.FixedPowerPriceIfNo15Minute + x.AgreedPowerPrice + x.EnergyPrice + x.OverdraftPowerPrice));
+            var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.EnergyPrice + x.OldFixedPrice + x.OldEnergyTransferPrice, x.EnergyPrice + x.FixedPowerPriceIfNo15Minute + x.AgreedPowerPrice + x.EnergyTransferPrice + x.OverdraftPowerPrice));
             var roundedMaxY = Math.Floor(maxY / 50.0) * 50.0 + 65.0;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
@@ -157,8 +160,8 @@ namespace Omreznina.Logic
                 SelectMonth = SelectMonth;
             }
             oldFixedPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldFixedPrice).ToArray());
-            oldEnergyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldEnergyPrice).ToArray());
-            if(mainReport.CalculationOptions.No15MinuteData)
+            oldEnergyTransportPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldEnergyTransferPrice).ToArray());
+            if(!mainReport.CalculationOptions.Has15MinuteData)
             {
                 agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
             }
@@ -166,7 +169,16 @@ namespace Omreznina.Logic
             {
                 agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
             }
+            energyTransferPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyTransferPrice).ToArray());
             energyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
+            if (mainReport.CalculationOptions.IncludeEnergyPrice)
+            {
+                Series[3].IsVisibleAtLegend = true;
+            }
+            else
+            {
+                Series[3].IsVisibleAtLegend = false;
+            }
             overdraftPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());
             zeros.SyncCollections(new decimal[mainReport.MonthlyReports.Length]);
         }

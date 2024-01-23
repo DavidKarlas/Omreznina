@@ -1,9 +1,11 @@
 ﻿@using Blazored.Toast
+@using Omreznina.Components
+@using Omreznina.Logic
+@using Omreznina.Shared
 @inherits LayoutComponentBase
-
+@inject ViewModel ViewModel
 <BlazoredToasts
     Position="Blazored.Toast.Configuration.ToastPosition.BottomRight"
     MaxToastCount="1"
     />
-
 @Body

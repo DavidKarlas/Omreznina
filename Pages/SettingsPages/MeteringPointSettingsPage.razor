@@ -1,0 +1,152 @@
+﻿@using Omreznina.Client.Logic;
+@using Omreznina.Components
+@using Omreznina.Logic;
+@using Blazored.Toast.Services;
+@inject IToastService toastService
+@inject ViewModel ViewModel
+
+<div class="d-flex flex-column mt-3 justify-content-center align-items-center">
+    <h1>Podatki merilnega mesta</h1>
+    <table cellpadding="3">
+        <tr>
+            <td style="text-align: end;">Tip merilnega mesta:</td>
+            <td>
+                <MultiValueRadioButtonComponent 
+                    @bind-Value="ViewModel.CalculationOptions.MeterType"
+                    Options="CalculationOptions.AllMeterTypes"/>
+            </td>
+        </tr>
+        @if (Array.IndexOf(CalculationOptions.AllMeterTypes, ViewModel.CalculationOptions.MeterType) < 2)
+        {
+            <tr>
+                <td style="text-align: end;">
+                    <Omreznina.Shared.Tooltip2 Text="Električni števec omogoča 15 minutno odčitavanje:">
+                        Če nimate merilnega mesta oz. električnega števca, ki bi poročal 15 minutne odčitke so za vas pravila nekoliko drugačna. Vnesti boste morali ročno porabo po mesecih.
+            Tudi možnosti izbirati moči blokov ne boste imeli, saj 14. člen "Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje" pravi, da se za merilna mesta, ki ne omogočajo 15 minutnega odčitavanja, za moč vseh blokov vzame 58% prikjučne moči če imate 1-fazen, 42% če mate 3-fazno prikjuček oz. 62% če imate več kot 17kW priklopne moči.
+                    </Omreznina.Shared.Tooltip2>
+                </td>
+                <td>
+                    <YesNoRadioButtonComponent 
+                        NoText="Ne omogoča" 
+                        YesText="Omogoča"
+                        @bind-Value="ViewModel.CalculationOptions.Has15MinuteData" />
+                </td>
+                </tr>
+                <tr>
+                <td style="text-align: end;">
+                    <Omreznina.Shared.Tooltip2 Text="Enotarifni(ET) ali Dvotarifni(NT/VT) obračun:">
+                        To lahko poiščete na elektro računu ali na <a href="https://mojelektro.si">mojelektro.si</a> v zavihku "Podrobnosti MM"
+                    </Omreznina.Shared.Tooltip2>
+                </td>
+                <td>
+                    <YesNoRadioButtonComponent 
+                        YesText="Nižja/Višja tarifa" 
+                        NoText="Enotna tarifa"
+                        @bind-Value="ViewModel.CalculationOptions.TwoTariffSystem" />
+                </td>
+            </tr>
+            <tr>
+                <td align="end" style="vertical-align:top;">
+                    <Omreznina.Shared.Tooltip2 Text="Moč varovalk oz. obračunske moči:">
+                        To lahko poiščete na elektro računu ali na <a href="https://mojelektro.si">mojelektro.si</a> v zavihku "Podrobnosti MM"
+                    </Omreznina.Shared.Tooltip2>
+                </td>
+                <td>
+                    <table>
+                        <tr>
+                            <th align="center">Enofazni</th>
+                            <th align="center">Trofazni</th>
+                        </tr>
+                        @foreach (var group in CalculationOptions.AllBreakersOptions.GroupBy(a => a.Amps))
+                        {
+                            <tr>
+                                <td>
+                                    @if (group.Count() == 2)
+                                    {
+                                        var textSinglePhase = group.Single(m => !m.ThreePhase).Text;
+                                        <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.BreakersText == textSinglePhase?"active":"")">
+                                            <input type="radio"
+                                                   name="breakers"
+                                                   checked="@(ViewModel.CalculationOptions.BreakersText == textSinglePhase)"
+                                                   @onchange="@(() => ViewModel.CalculationOptions.BreakersText = textSinglePhase)" />
+                                            @textSinglePhase
+                                        </label>
+                                    }
+                                </td>
+                                <td>
+                                    @{
+                                        var textThreePhase = group.Single(m => m.ThreePhase).Text;
+                                    }
+                                    <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.BreakersText == textThreePhase?"active":"")">
+                                        <input type="radio"
+                                               name="breakers"
+                                               checked="@(ViewModel.CalculationOptions.BreakersText == textThreePhase)"
+                                               @onchange="@(() => ViewModel.CalculationOptions.BreakersText = textThreePhase)" />
+                                        @textThreePhase
+                                    </label>
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                </td>
+            </tr>
+        }
+        else if (ViewModel.CalculationOptions.MeterType == "Drugo")
+        {
+            <tr>
+                <td align="right">
+                    <span>Način prikjučitve oz. uporabniška skupina:</span>
+                </td>
+                <td>
+                    <MultiValueRadioButtonComponent 
+                        VerticalOptions="true"
+                        @bind-Value="ViewModel.CalculationOptions.ConnectionType"
+                        Options="CalculationOptions.OldPriceList.Keys" />
+                </td>
+            </tr>
+            <tr>
+                <td align="right">
+                    <span>Vrsta odjema:</span>
+                </td>
+                <td>
+                    <MultiValueRadioButtonComponent 
+                        @bind-Value="ViewModel.CalculationOptions.VrstaOdjema"
+                        Options="CalculationOptions.OldPriceList[ViewModel.CalculationOptions.ConnectionType].Keys" />
+                </td>
+            </tr>
+            <tr>
+                <td align="right">
+                    <span>Obračunska moč v kW:</span>
+                </td>
+                <td>
+                    <InputNumber style="max-width:100px" class="m-1" @bind-Value="ViewModel.CalculationOptions.ObracunskaMoc" />
+                </td>
+            </tr>
+        }
+    </table>
+    
+    <NavigationButtonsComponent ValidateNextButton="ValidateSettings" />
+</div>
+
+@code {
+    private bool ValidateSettings()
+    {
+        if (ViewModel.CalculationOptions.MeterType == "Drugo")
+        {
+            if (ViewModel.CalculationOptions.ObracunskaMoc <= 0)
+            {
+                toastService.ShowError("Vnesite obračunsko moč");
+                return false;
+            }
+        }
+        else
+        {
+            if (string.IsNullOrEmpty(ViewModel.CalculationOptions.BreakersText))
+            {
+                toastService.ShowError("Izberite moč varovalk");
+                return false;
+            }
+        }
+        return true;
+    }
+}

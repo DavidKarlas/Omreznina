@@ -1,0 +1,72 @@
+﻿@using Omreznina.Client.Logic;
+@using Omreznina.Components
+@using Omreznina.Logic;
+@using Omreznina.Client.Pages
+@using Blazored.Toast.Services;
+@using Omreznina.Shared
+@inject IToastService toastService
+@inject ViewModel ViewModel
+<div class="d-flex flex-column  mt-3 justify-content-center align-items-center">
+    <h1>Odpri .csv datoteko iz MojElektro.si</h1>
+    <span>Za najboljšo izkušnjo je priporočljivo izvoziti 15-minutno .csv datoteko od 1.1.2023 do 31.12.2023.</span>
+    <InputFile id="csvFile" OnChange="@LoadFiles" hidden multiple />
+    <button class="btn m-1 btn-primary" onclick="document.getElementById('csvFile').click()">Odpri .csv datoteko iz mojelektro.si</button>
+    <div>
+        <h2>ali</h2>
+    </div>
+    <h1>Vnesi porabo po mesecih</h1>
+    <span>Če slučajno nimate dostopa do MojElektro.si ali pa vaše merilno mesto ne podpira 15 minutnega odčitavanja, lahko ročno vnesete porabo po mesecih.</span>
+
+    <span>To žal ni tako natančen način, kot z .csv datoteko saj ne prikazuje presežkov, ampak je zelo dober približek.</span>
+    <div>
+        <table>
+            @if (ViewModel.CalculationOptions.TwoTariffSystem)
+            {
+                <tr>
+                    <th>Mesec</th>
+                    <th>Nižja tarifa(kWh)</th>
+                    <th>Višja tarifa(kWh)</th>
+                </tr>
+                @foreach (var month in Enumerable.Range(0, 12))
+                {
+                    <tr>
+                        <td>@UIHelper.MonthConverter(month + 1, false)</td>
+                        <td><InputNumber class="m-1" @bind-Value="ViewModel.MonthsEnergyUsageInKWh[month].LowTarif" /></td>
+                        <td><InputNumber class="m-1" @bind-Value="ViewModel.MonthsEnergyUsageInKWh[month].HighTarif" /></td>
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr>
+                    <th>Mesec</th>
+                    <th>Poraba v kWh</th>
+                </tr>
+                @foreach (var month in Enumerable.Range(0, 12))
+                {
+                    <tr>
+                        <td>@UIHelper.MonthConverter(month + 1, false)</td>
+                        <td><InputNumber style="max-width:70px" class="m-1" @bind-Value="ViewModel.MonthsEnergyUsageInKWh[month].SingleTarif" /></td>
+                    </tr>
+                }
+            }
+        </table>
+    </div>
+    <NavigationButtonsComponent />
+</div>
+
+@code {
+    private async Task LoadFiles(InputFileChangeEventArgs e)
+    {
+        var memoryStreams = new List<Stream>();
+        foreach (var file in e.GetMultipleFiles())
+        {
+            var ms = new MemoryStream();
+            await file.OpenReadStream(30 * 1024 * 1024).CopyToAsync(ms);
+            memoryStreams.Add(ms);
+            ms.Position = 0;
+        }
+        await ViewModel.LoadCSVs(memoryStreams);
+        ViewModel.NextPage();
+    }
+}

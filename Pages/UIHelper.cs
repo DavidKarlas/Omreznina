@@ -56,11 +56,8 @@ namespace Omreznina.Client.Pages
         public static string ToKW(this decimal value) => $"{value:0.00} kW";
         public static string ToKW(this double value) => $"{value:0.00} kW";
 
-        public static SolidColorPaint OldFixedColor { get => "#CC8F00".ToPaint(); }
-        public static SolidColorPaint OldEnergyColor { get => "#05a47b".ToPaint(); }
-
-
         public static SolidColorPaint EnergyTransferColor { get => "#05a47b".ToPaint(); }
+        public static SolidColorPaint EnergyColor { get => "#6f3096".ToPaint(); }
         public static SolidColorPaint AgreedPowerColor { get => "#CC8F00".ToPaint(); }
         public static SolidColorPaint OverdraftColor { get => "#A90F33".ToPaint(); }
         public static readonly SolidColorPaint[] AgreedPowerBlockColors = [

@@ -34,7 +34,7 @@ namespace Omreznina.Logic
             Series = [
                 new LineSeries<CalculatedUsage>{
                      XToolTipLabelFormatter = value => FormatTime(value.Coordinate.SecondaryValue).ToString("HH:mm"),
-                    Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.ConsumedPower),
+                    Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.ImportPower),
                     Values = usages,
                      Stroke="#00A9FF".ToPaint(4),
                      Fill=null,
@@ -46,7 +46,7 @@ namespace Omreznina.Logic
                 },
                 new LineSeries<CalculatedUsage>{
                      Values = usages,
-                     Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.GivenPower),
+                     Mapping = (usage, index) => new Coordinate(index, (double)usage.Source.ExportPower),
                      Stroke="#00e600".ToPaint(4),
                      Fill=null,
                      GeometrySize=0,
@@ -107,7 +107,7 @@ namespace Omreznina.Logic
             IsVisible = true;
             Title.Text = $"15 minutni odčitki za {dayReport.Day:dd.MM.yyyy}";
             usages.SyncCollections(dayReport.Usages);
-            var maxPower = dayReport.Usages.Max(u => Math.Max(u.Source.ConsumedPower, u.Source.GivenPower));
+            var maxPower = dayReport.Usages.Max(u => Math.Max(u.Source.ImportPower, u.Source.ExportPower));
             var visuals = new List<GeometryVisual<RectangleGeometry>>();
             var lowBlock = dayReport.Usages[0].Source.Block;
             maxPower = Math.Max(maxPower, options.AgreedMaxPowerBlocks[lowBlock]);

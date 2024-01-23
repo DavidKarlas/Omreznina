@@ -20,6 +20,7 @@ namespace Omreznina.Logic
         private readonly ObservableCollection<decimal> agreedPowerPriceBlok2 = new([0, 0]);
         private readonly ObservableCollection<decimal> agreedPowerPriceBlok3 = new([0, 0]);
         private readonly ObservableCollection<decimal> agreedPowerPriceBlok4 = new([0, 0]);
+        private readonly ObservableCollection<decimal> energyTransferPrice = new([0, 0]);
         private readonly ObservableCollection<decimal> energyPrice = new([0, 0]);
         private readonly ObservableCollection<decimal> overdraftPriceBlok1 = new([0, 0]);
         private readonly ObservableCollection<decimal> overdraftPriceBlok2 = new([0, 0]);
@@ -51,18 +52,19 @@ namespace Omreznina.Logic
                 LabelsPaint=null
             }];
             Series = [
-                    CreateStackedColumn("Star obračun: Obračunska moč", 1, UIHelper.OldFixedColor, oldFixed),
-                    CreateStackedColumn("Star obračun: Energija", 1, UIHelper.OldEnergyColor, oldEnergy),
-                    CreateStackedColumn("Priklopna moč", 1, UIHelper.OldFixedColor, fixedPowerPriceNo15MinMesures),
+                    CreateStackedColumn("Star obračun: Omrežnina Moč", 1, UIHelper.AgreedPowerColor, oldFixed),
+                    CreateStackedColumn("Star obračun: Omrežnina Poraba", 1, UIHelper.EnergyTransferColor, oldEnergy),
+                    CreateStackedColumn("Omrežnina Moč", 1, UIHelper.AgreedPowerColor, fixedPowerPriceNo15MinMesures),
                     CreateStackedColumn("Blok 1", 1, UIHelper.AgreedPowerBlockColors[0], agreedPowerPriceBlok1),
-                    CreateStackedColumn("Blok 2", 1,UIHelper.AgreedPowerBlockColors[1], agreedPowerPriceBlok2),
-                    CreateStackedColumn("Blok 3", 1,UIHelper.AgreedPowerBlockColors[2], agreedPowerPriceBlok3),
-                    CreateStackedColumn("Blok 4", 1,UIHelper.AgreedPowerBlockColors[3], agreedPowerPriceBlok4),
-                    CreateStackedColumn("Energija", 1,UIHelper.EnergyTransferColor, energyPrice),
-                    CreateStackedColumn("Blok 1 - Prek", 1,UIHelper.OverdraftBlockColors[0], overdraftPriceBlok1),
-                    CreateStackedColumn("Blok 2 - Prek", 1,UIHelper.OverdraftBlockColors[1], overdraftPriceBlok2),
-                    CreateStackedColumn("Blok 3 - Prek", 1,UIHelper.OverdraftBlockColors[2], overdraftPriceBlok3),
-                    CreateStackedColumn("Blok 4 - Prek", 1,UIHelper.OverdraftBlockColors[3], overdraftPriceBlok4),
+                    CreateStackedColumn("Blok 2", 1, UIHelper.AgreedPowerBlockColors[1], agreedPowerPriceBlok2),
+                    CreateStackedColumn("Blok 3", 1, UIHelper.AgreedPowerBlockColors[2], agreedPowerPriceBlok3),
+                    CreateStackedColumn("Blok 4", 1, UIHelper.AgreedPowerBlockColors[3], agreedPowerPriceBlok4),
+                    CreateStackedColumn("Omrežnina Poraba", 1, UIHelper.EnergyTransferColor, energyTransferPrice),
+                    CreateStackedColumn("Energija", 1, UIHelper.EnergyColor, energyPrice),
+                    CreateStackedColumn("Blok 1 - Preko.", 1, UIHelper.OverdraftBlockColors[0], overdraftPriceBlok1),
+                    CreateStackedColumn("Blok 2 - Preko.", 1, UIHelper.OverdraftBlockColors[1], overdraftPriceBlok2),
+                    CreateStackedColumn("Blok 3 - Preko.", 1, UIHelper.OverdraftBlockColors[2], overdraftPriceBlok3),
+                    CreateStackedColumn("Blok 4 - Preko.", 1, UIHelper.OverdraftBlockColors[3], overdraftPriceBlok4),
                     new StackedRowSeries<decimal>
                     {
                         IsVisibleAtLegend = false,
@@ -81,7 +83,7 @@ namespace Omreznina.Logic
                 ];
         }
 
-        private StackedRowSeries<decimal> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<decimal> values)
+        private StackedRowSeries<decimal> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<decimal> values, bool hideLegend = false)
         {
             return new StackedRowSeries<decimal> {
                 Name = name,
@@ -101,13 +103,23 @@ namespace Omreznina.Logic
                 DataLabelsPaint = new SolidColorPaint(new SKColor(240, 240, 240)),
                 DataLabelsPosition = DataLabelsPosition.Middle,
                 YToolTipLabelFormatter = point => point.Model.ToEuro(),
+                IsVisibleAtLegend = !hideLegend,
                 Fill = color
             };
         }
 
         public void Update(OmrezninaReport mainReport)
         {
-            if (mainReport.CalculationOptions.No15MinuteData)
+            if (mainReport.CalculationOptions.IncludeEnergyPrice)
+            {
+                Series[8].IsVisibleAtLegend = true;
+            }
+            else
+            {
+                Series[8].IsVisibleAtLegend = false;
+            }
+
+            if (!mainReport.CalculationOptions.Has15MinuteData)
             {
                 Series[2].IsVisibleAtLegend = true;
 
@@ -115,10 +127,10 @@ namespace Omreznina.Logic
                 Series[4].IsVisibleAtLegend = false;
                 Series[5].IsVisibleAtLegend = false;
                 Series[6].IsVisibleAtLegend = false;
-                Series[8].IsVisibleAtLegend = false;
-                Series[9].IsVisibleAtLegend = false;
-                Series[10].IsVisibleAtLegend = false;
-                Series[11].IsVisibleAtLegend = false;
+                Series[^5].IsVisibleAtLegend = false;
+                Series[^4].IsVisibleAtLegend = false;
+                Series[^3].IsVisibleAtLegend = false;
+                Series[^2].IsVisibleAtLegend = false;
             }
             else
             {
@@ -128,17 +140,22 @@ namespace Omreznina.Logic
                 Series[4].IsVisibleAtLegend = true;
                 Series[5].IsVisibleAtLegend = true;
                 Series[6].IsVisibleAtLegend = true;
-                Series[8].IsVisibleAtLegend = true;
-                Series[9].IsVisibleAtLegend = true;
-                Series[10].IsVisibleAtLegend = true;
-                Series[11].IsVisibleAtLegend = true;
+                Series[^5].IsVisibleAtLegend = true;
+                Series[^4].IsVisibleAtLegend = true;
+                Series[^3].IsVisibleAtLegend = true;
+                Series[^2].IsVisibleAtLegend = true;
             }
 
             if (mainReport.FixedPowerPriceIfNo15Minute != fixedPowerPriceNo15MinMesures[0])
                 fixedPowerPriceNo15MinMesures[0] = mainReport.FixedPowerPriceIfNo15Minute;
 
+            if (mainReport.EnergyTransferPrice != energyTransferPrice[0])
+                energyTransferPrice[0] = mainReport.EnergyTransferPrice;
+
             if (mainReport.EnergyPrice != energyPrice[0])
                 energyPrice[0] = mainReport.EnergyPrice;
+            if (mainReport.EnergyPrice != energyPrice[1])
+                energyPrice[1] = mainReport.EnergyPrice;
 
             if (mainReport.AgreedPowerPricePerBlock[0] != agreedPowerPriceBlok1[0])
                 agreedPowerPriceBlok1[0] = mainReport.AgreedPowerPricePerBlock[0];
@@ -160,10 +177,19 @@ namespace Omreznina.Logic
 
             if (mainReport.OldFixedPrice != oldFixed[1])
                 oldFixed[1] = mainReport.OldFixedPrice;
-            if (mainReport.OldEnergyPrice != oldEnergy[1])
-                oldEnergy[1] = mainReport.OldEnergyPrice;
+            if (mainReport.OldEnergyTransferPrice != oldEnergy[1])
+                oldEnergy[1] = mainReport.OldEnergyTransferPrice;
 
-            var maxValue = (double)Math.Max(mainReport.OldFixedPrice + mainReport.OldEnergyPrice, mainReport.EnergyPrice + mainReport.OverdraftPowerPrice + mainReport.AgreedPowerPrice + mainReport.FixedPowerPriceIfNo15Minute);
+            var maxValue = (double)Math.Max(
+                mainReport.OldFixedPrice + 
+                mainReport.OldEnergyTransferPrice +
+                mainReport.EnergyPrice,
+
+                mainReport.EnergyTransferPrice + 
+                mainReport.OverdraftPowerPrice +
+                mainReport.AgreedPowerPrice +
+                mainReport.FixedPowerPriceIfNo15Minute +
+                mainReport.EnergyPrice);
             if (maxValue != XAxis[0].MaxLimit)
                 XAxis[0].MaxLimit = maxValue * 1.05;
         }

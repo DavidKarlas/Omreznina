@@ -1,302 +1,55 @@
-﻿using Omreznina.Client.Pages;
-using System.Collections.ObjectModel;
+﻿using Omreznina.Models;
 using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 
 namespace Omreznina.Client.Logic
 {
-    public class CalculationOptions
-    {
-        public static (string Text, int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikljucnaMoc, bool ThreePhase)[] AllBreakersOptions =
-             [
-            ("3kW (1x16 A)", 3, 3, 4, false),
-            ("3kW (1x20 A)", 3, 5, 5, false),
-            ("6kW (1x25 A)", 6, 6, 6, false),
-            ("7kW (1x32 A)", 7, 7, 7, false),
-            ("7kW (1x35 A)", 7, 8, 8, false),
 
-            ("7kW (3x16 A)", 7, 11, 11  , true),
-            ("7kW (3x20 A)", 7, 14, 14  , true),
-            ("10kW (3x25 A)", 10, 17, 17, true),
-            ("22kW (3x32 A)", 22, 22, 22, true),
-            ("24kW (3x35 A)", 24, 24, 24, true),
-            ("28kW (3x40 A)", 28, 28, 28, true),
-            ("35kW (3x50 A)", 35, 35, 35, true),
-            ("43kW (3x63 A)", 43, 43, 43, true)
-            ];
-
-        public bool No15MinuteData { get; set; } = false;
-
-        public string MeterType
-        {
-            get => meterType;
-            set
-            {
-                if (AllMeterTypes[0] == value)
-                {
-                    ConnectionType = "Nizka napetost(NN), uporabniška skupina 0";
-                    VrstaOdjema = "Gospodinjstvo";
-                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
-
-                }
-                else if (AllMeterTypes[1] == value)
-                {
-                    ConnectionType = "Nizka napetost(NN), uporabniška skupina 0";
-                    VrstaOdjema = "Brez merjenja moči";
-                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
-                }
-                else
-                {
-                    TwoTariffSystemText = "VT/MT";
-                }
-                meterType = value;
-            }
-        }
-        public static string[] AllMeterTypes = ["Gospodinjstvo", "Mali poslovni odjemalec(do 43kW)", "Ostalo"];
-        public string ConnectionType
-        {
-            get => connectionType; set
-            {
-                if (connectionType != value)
-                {
-                    connectionType = value;
-                    VrstaOdjema = OldPriceList[value].Keys.First();
-                }
-                connectionType = value;
-                UserGroup = int.Parse(value.Substring(value.Length - 1));
-            }
-        }
-        public int UserGroup { get; private set; } = 0;
-        public string VrstaOdjema { get; set; } = "Gospodinjstvo";
-
-        public static Dictionary<string, Dictionary<string, (decimal OM, decimal VT, decimal MT, decimal ET)>> OldPriceList = new() {
-            {"Visoka napetost(VN), uporabniška skupina 4",
-                new(){
-                    {"T ≥ 6000 ur", (0.95460M, 0.00158M, 0.00123M, -1M) },
-                    {"6000 > T ≥ 2500 ur", (1.02089M, 0.00145M, 0.00111M, -1M) },
-                    {"T < 2500 ur", (1.10050M, 0.00153M, 0.00118M, -1M) }
-                }
-            },
-            {"SN na zbiralnici SN v RTP, uporabniška skupina 3",
-                new() {
-                    {"T ≥ 2500 ur", (3.09043M, 0.00074M, 0.00057M, -1M) },
-                    {"T < 2500 ur", (3.05375M, 0.00097M, 0.00075M, -1M) }
-                }
-            },
-            {"Srednja napetost(SN), uporabniška skupina 2",
-                new() {
-                    {"T ≥ 2500 ur", (3.22148M, 0.00789M, 0.00608M, -1M) },
-                    {"T < 2500 ur", (2.47536M, 0.01252M, 0.00964M, -1M) }
-                }
-            },
-            {"NN na zbiralnici NN v TP, uporabniška skupina 1",
-                new() {
-                    {"T ≥ 2500 ur", (4.33074M, 0.00765M, 0.00592M, -1M) },
-                    {"T < 2500 ur", (3.60756M, 0.01218M, 0.00936M, -1M) }
-                }
-            },
-            {"Nizka napetost(NN), uporabniška skupina 0",
-                new(){
-                    {"T ≥ 2500 ur", (5.71190M, 0.01689M, 0.01298M, -1M) },
-                    {"T < 2500 ur", (4.74796M, 0.02290M, 0.01759M, -1M) },
-                    {"Polnjenje EV", (2.37398M, 0.01144M, 0.00882M, -1M) },
-                    {"Brez merjenja moči", (0.79600M, 0.04308M, 0.03311M, 0.03973M) },
-                    {"Gospodinjstvo", (0.79600M, 0.04308M, 0.03311M, 0.03973M) }
-                }
-            }
-        };
-
-        private Dictionary<string, (int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikjucnaMoc, bool ThreePhase)> MappedPowerBreakers;
-
-        public class AgreedPowerBlocks : ObservableCollection<decimal>
-        {
-            public event Action<string>? ErrorMessage;
-
-            public void ResetToMinimal()
-            {
-                for (int i = 0; i < 5; i++)
-                {
-                    this[i] = minimumPowerForBlocks;
-                }
-            }
-
-            protected override void SetItem(int index, decimal newValue)
-            {
-                if (index > 4)
-                    throw new System.Exception("Max 5 blocks");
-                if (index < 0)
-                    throw new IndexOutOfRangeException();
-
-                if (newValue < minimumPowerForBlocks)
-                {
-                    newValue = minimumPowerForBlocks;
-                    ErrorMessage?.Invoke($"Moč prvega bloka mora biti večja ali enaka {(minimumPowerForBlocks.ToKW())} glede na moč varovalk na podlagi 4. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                }
-                if (newValue > maximumPowerForBlocks)
-                {
-                    newValue = maximumPowerForBlocks;
-                    ErrorMessage?.Invoke($"Moč blokov mora biti manjša ali enaka moči varovalk");
-                }
-                base.SetItem(index, newValue);
-                if (index + 1 < Count && this[index + 1] < newValue)
-                {
-                    this[index + 1] = newValue;
-                    ErrorMessage?.Invoke($"Moč {index + 2}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti manjša na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                }
-                if (index > 0 && this[index - 1] > newValue)
-                {
-                    this[index - 1] = newValue;
-                    ErrorMessage?.Invoke($"Moč {index}. bloka se je prilagodila moči {index + 1}. bloka, saj ne sme biti večja na podlagi 10. odstavka 12. člena \"Akta o metodologiji za obračunavanje omrežnine za elektrooperaterje\"");
-                }
-            }
-
-            private decimal minimumPowerForBlocks;
-            private decimal maximumPowerForBlocks;
-
-            /// <summary>
-            /// (4) Minimalna dogovorjena obračunska moč za časovni blok 1 uporabnika sistema se določi:
-            ///    - za enofazni priključek uporabnika sistema s priključno močjo enako ali manjšo od 43 kW, kot 31 % priključne moči iz soglasja za priključitev, vendar ne manj kot 2,0 kW;
-            ///    - za trifazne priključke s priključno močjo enako ali manjšo od 43 kW, kot 27 % priključne moči iz soglasja za priključitev, vendar ne manj kot 3,5 kW za uporabnike sistema s priključno močjo do vključno 17 kW;
-            ///    - za trifazne priključke s priključno močjo enako ali manjšo od 43 kW ter za uporabnike sistema iz drugega odstavka 37. člena tega akta, kot 34 % priključne moči iz soglasja za priključitev, za uporabnike sistema s priključno močjo nad 17 kW;
-            ///    - za uporabnike sistema s priključno močjo nad 43 kW kot 25 % priključne moči.
-            /// </summary>
-            public void SetVarovalkePower(int PrikljucnaMoc, bool ThreePhase, int ObracunskaMoc)
-            {
-                var prikljucnaMoc = (decimal)PrikljucnaMoc;
-                var oldMinimalPowerForBlock1 = minimumPowerForBlocks;
-                if (ThreePhase)
-                {
-                    if (prikljucnaMoc <= 17)
-                        minimumPowerForBlocks = Math.Max(3.5M, 0.27M * prikljucnaMoc);
-                    else if (prikljucnaMoc <= 43)
-                        minimumPowerForBlocks = 0.34M * prikljucnaMoc;
-                    else
-                        minimumPowerForBlocks = 0.25M * ObracunskaMoc;
-                }
-                else
-                {
-                    if (prikljucnaMoc <= 43)
-                        minimumPowerForBlocks = Math.Max(2M, 0.31M * prikljucnaMoc);
-                    else
-                        minimumPowerForBlocks = 0.25M * ObracunskaMoc;
-                }
-                minimumPowerForBlocks = Math.Round(minimumPowerForBlocks, 1);
-                if (oldMinimalPowerForBlock1 != minimumPowerForBlocks)
-                {
-                    if (this[0] < minimumPowerForBlocks)
-                        this[0] = minimumPowerForBlocks;
-                }
-                var oldMaximumPowerForBlocks = maximumPowerForBlocks;
-                maximumPowerForBlocks = Math.Round(prikljucnaMoc, 1);
-                if (maximumPowerForBlocks != oldMaximumPowerForBlocks)
-                {
-                    if (this[4] > maximumPowerForBlocks)
-                        this[4] = maximumPowerForBlocks;
-                }
-            }
-        }
-
-        public AgreedPowerBlocks AgreedMaxPowerBlocks { get; set; } = [7.5M, 8, 9, 10, 11];
-        public int SimulationYear { get; set; } = 2024;
-        public bool IncludeVAT { get; set; } = false;
-        public bool NetMetering
-        {
-            get => netMetering; set
-            {
-                netMetering = value;
-                if (value)
-                {
-                    TwoTariffSystemText = "ET";
-                }
-            }
-        }
-
-        private string? breakersText = null;
-        private bool netMetering = false;
-        private string meterType = "Gospodinjstvo";
-        private int obracunskaMoc;
-        private string connectionType = "Nizka napetost(NN), uporabniška skupina 0";
-
-        public string? BreakersText
-        {
-            get
-            {
-                return breakersText;
-            }
-            set
-            {
-                breakersText = value;
-                if (meterType == "Gospodinjstvo")
-                {
-                    ObracunskaMoc = BreakersValue.ObracunskaMocGospodinjstva;
-                }
-                else
-                {
-                    ObracunskaMoc = BreakersValue.ObracunskaMocMalaPodjetja;
-                }
-            }
-        }
-        public int ObracunskaMoc
-        {
-            get => obracunskaMoc; set
-            {
-                obracunskaMoc = value;
-                if (MeterType == "Ostalo")
-                {
-                    AgreedMaxPowerBlocks.SetVarovalkePower(999, true, ObracunskaMoc);
-                }
-                else
-                {
-                    AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue.PrikljucnaMoc, BreakersValue.ThreePhase, ObracunskaMoc);
-                }
-            }
-        }
-        public (int ObracunskaMocGospodinjstva, int ObracunskaMocMalaPodjetja, int PrikljucnaMoc, bool ThreePhase) BreakersValue
-        {
-            get => breakersText == null ? (0, 0, 0, false) : MappedPowerBreakers.TryGetValue(breakersText, out var val) ? val : (0, 0, 0, false);
-        }
-
-        public string? TwoTariffSystemText { get; set; } = null;
-
-        public bool TwoTariffSystem { get => TwoTariffSystemText == "VT/MT"; }
-
-        public CalculationOptions()
-        {
-            MappedPowerBreakers = AllBreakersOptions.ToDictionary(v => v.Text, v => (v.ObracunskaMocGospodinjstva, v.ObracunskaMocMalaPodjetja, v.PrikljucnaMoc, v.ThreePhase));
-            AgreedMaxPowerBlocks.SetVarovalkePower(BreakersValue.PrikljucnaMoc, BreakersValue.ThreePhase, ObracunskaMoc);
-        }
-    }
-
-    public record RawUsage15Min(DateTime DateTime, int Block, bool HighTariff, decimal ConsumedPower, decimal ConsumedEnergy, decimal GivenPower, decimal GivenEnergy);
-    public record CalculatedUsage(RawUsage15Min Source, decimal OverdraftPower, decimal EnergyTansportPrice, decimal OverdraftPrice, decimal AgreedPowerPrice, decimal OldEnergyPrice);
+    public record RawUsage15Min(DateTime DateTime, int Block, bool HighTariff, decimal ImportPower, decimal ImportEnergy, decimal ExportPower, decimal ExportEnergy);
+    public record CalculatedUsage(RawUsage15Min Source, decimal OverdraftPower, decimal OverdraftPrice, decimal AgreedPowerPrice);
 
     public class OmrezninaReport : PeriodReport
     {
         public MonthlyReport[] MonthlyReports { get; }
         public CalculationOptions CalculationOptions { get; }
 
-        public OmrezninaReport(CalculationOptions calculationOptions, Dictionary<(int Year, int Month), List<RawUsage15Min>>? rawUsages, decimal[] manualEnergyUsageByMonths)
+        public OmrezninaReport(CalculationOptions calculationOptions, Dictionary<(int Year, int Month), List<RawUsage15Min>>? rawUsages, ManuallyEnteredMonthlyConsumption[] manualEnergyUsageByMonths)
         {
             CalculationOptions = calculationOptions;
             if (rawUsages == null)
             {
-                MonthlyReports = Enumerable.Range(1, 12).Select(m => new MonthlyReport(calculationOptions, (2021, m), [], manualEnergyUsageByMonths[m - 1])).ToArray();
+                MonthlyReports = Enumerable.Range(1, 12).Select(m => new MonthlyReport(calculationOptions, (2023, m), [], manualEnergyUsageByMonths[m - 1])).ToArray();
             }
             else
             {
-                MonthlyReports = rawUsages.Select(m => new MonthlyReport(calculationOptions, m.Key, m.Value, 0)).OrderBy(m => m.Month).ToArray();
+                MonthlyReports = rawUsages.Select(m => new MonthlyReport(calculationOptions, m.Key, m.Value, null)).OrderBy(m => m.Month).ToArray();
             }
-            NetMeteringEnergyInKWh = Math.Max(0M, MonthlyReports.Sum(m => m.NetMeteringEnergyInKWh));
+            HighTariffImportEnergyInKWh = MonthlyReports.Sum(m => m.HighTariffImportEnergyInKWh);
+            HighTariffExportEnergyInKWh = MonthlyReports.Sum(m => m.HighTariffExportEnergyInKWh);
+            LowTariffImportEnergyInKWh = MonthlyReports.Sum(m => m.LowTariffImportEnergyInKWh);
+            LowTariffExportEnergyInKWh = MonthlyReports.Sum(m => m.LowTariffExportEnergyInKWh);
+
             if (calculationOptions.NetMetering)
             {
-                EnergyPrice = NetMeteringEnergyInKWh * BlockPrices.GetCombinedEnergyPriceSingleTariffPerKWH(calculationOptions.IncludeVAT);
-                OldEnergyPrice = NetMeteringEnergyInKWh * BlockPrices.GetOldEnergyPriceSingleTariffPerKWh(calculationOptions);
+                var netMeteringEnergyInKWh = HighTariffImportEnergyInKWh
+                    - HighTariffExportEnergyInKWh
+                    + LowTariffImportEnergyInKWh
+                    - LowTariffExportEnergyInKWh;
+                netMeteringEnergyInKWh = Math.Max(netMeteringEnergyInKWh, 0);
+                EnergyTransferPrice = netMeteringEnergyInKWh
+                    * BlockPrices.GetNonBlockTransferEnergyPerKWH(null, calculationOptions);
+                OldEnergyTransferPrice = netMeteringEnergyInKWh * BlockPrices.GetOldTransferEnergyPriceSingleTariffPerKWh(calculationOptions);
+                if (calculationOptions.IncludeEnergyPrice)
+                    EnergyPrice = netMeteringEnergyInKWh * calculationOptions.SingleTariffEnergyPrice * calculationOptions.VATMultiplier;
+                else
+                    EnergyPrice = 0;
             }
             else
             {
+                EnergyTransferPrice = MonthlyReports.Sum(m => m.EnergyTransferPrice);
+                OldEnergyTransferPrice = MonthlyReports.Sum(m => m.OldEnergyTransferPrice);
                 EnergyPrice = MonthlyReports.Sum(m => m.EnergyPrice);
-                OldEnergyPrice = MonthlyReports.Sum(m => m.OldEnergyPrice);
             }
             OldFixedPrice = MonthlyReports.Sum(m => m.OldFixedPrice);
             FixedPowerPriceIfNo15Minute = MonthlyReports.Sum(m => m.FixedPowerPriceIfNo15Minute);
@@ -306,7 +59,7 @@ namespace Omreznina.Client.Logic
             {
                 OverdraftPowerPricePerBlock[i] = MonthlyReports.Sum(m => m.OverdraftPowerPricePerBlock[i]);
                 AgreedPowerPricePerBlock[i] = MonthlyReports.Sum(m => m.AgreedPowerPricePerBlock[i]);
-                EnergyPerBlockInKWh[i] = MonthlyReports.Sum(m => m.EnergyPerBlockInKWh[i]);
+                EnergyImportPerBlockInKWh[i] = MonthlyReports.Sum(m => m.EnergyImportPerBlockInKWh[i]);
             }
         }
 
@@ -318,10 +71,10 @@ namespace Omreznina.Client.Logic
                 using var streamReader = new StreamReader(stream);
                 var csv = await Sylvan.Data.Csv.CsvDataReader.CreateAsync(streamReader);
                 var dateTime15minColumn = csv.GetOrdinal("Časovna značka");
-                var takenPowerColumn = csv.GetOrdinal("P+ Prejeta delovna moč");
-                var givenPowerColumn = csv.GetOrdinal("P- Oddana delovna moč");
-                var consumedEnergyColumn = csv.GetOrdinal("Energija A+");
-                var givenEnergyColumn = csv.GetOrdinal("Energija A-");
+                var importPowerColumn = csv.GetOrdinal("P+ Prejeta delovna moč");
+                var exportPowerColumn = csv.GetOrdinal("P- Oddana delovna moč");
+                var importEnergyColumn = csv.GetOrdinal("Energija A+");
+                var exportEnergyColumn = csv.GetOrdinal("Energija A-");
                 var blockColumn = csv.GetOrdinal("Blok");
                 while (csv.Read())
                 {
@@ -332,17 +85,17 @@ namespace Omreznina.Client.Logic
                     {
                         parsedUsageAll[(dateTime.Year, dateTime.Month)] = parsedUsage = new List<RawUsage15Min>();
                     }
-                    if (csv.GetFieldSpan(takenPowerColumn).IsEmpty)
+                    if (csv.GetFieldSpan(importPowerColumn).IsEmpty)
                         continue;
-                    var consumedPower = decimal.Parse(csv.GetFieldSpan(takenPowerColumn), CultureInfo.InvariantCulture);
-                    var givenPower = csv.GetFieldSpan(givenPowerColumn).IsEmpty ? 0M : decimal.Parse(csv.GetFieldSpan(givenPowerColumn), CultureInfo.InvariantCulture);
-                    var consumedEnergy = csv.GetDecimal(consumedEnergyColumn);
-                    var givenEnergy = csv.GetFieldSpan(givenEnergyColumn).IsEmpty ? 0M : decimal.Parse(csv.GetFieldSpan(givenEnergyColumn), CultureInfo.InvariantCulture);
+                    var importPower = decimal.Parse(csv.GetFieldSpan(importPowerColumn), CultureInfo.InvariantCulture);
+                    var exportPower = csv.GetFieldSpan(exportPowerColumn).IsEmpty ? 0M : decimal.Parse(csv.GetFieldSpan(exportPowerColumn), CultureInfo.InvariantCulture);
+                    var importEnergy = csv.GetDecimal(importEnergyColumn);
+                    var exportEnergy = csv.GetFieldSpan(exportEnergyColumn).IsEmpty ? 0M : decimal.Parse(csv.GetFieldSpan(exportEnergyColumn), CultureInfo.InvariantCulture);
                     var theirBlock = csv.GetInt32(blockColumn) - 1;
                     //var myBlock = dateTime.ToBlock();
                     //if (myBlock != theirBlock)
                     //    Console.WriteLine($"My block:{myBlock} Their block:{theirBlock}");
-                    parsedUsage.Add(new(dateTime, theirBlock, dateTime.IsHighTariff(), consumedPower, consumedEnergy, givenPower, givenEnergy));
+                    parsedUsage.Add(new(dateTime, theirBlock, dateTime.IsHighTariff(), importPower, importEnergy, exportPower, exportEnergy));
                 }
             }
             return parsedUsageAll;
@@ -351,16 +104,28 @@ namespace Omreznina.Client.Logic
 
     public class PeriodReport
     {
+        #region Old prices
         public decimal OldFixedPrice { get; set; }
-        public decimal OldEnergyPrice { get; set; }
+        public decimal OldEnergyTransferPrice { get; set; }
+        public decimal OldEnergyTransferLowTariffPrice { get; set; }
+        public decimal OldEnergyTransferHighTariffPrice { get; set; }
+        #endregion
+
         public decimal EnergyPrice { get; set; }
-        public decimal NetMeteringEnergyInKWh { get; set; }
+
+        public decimal EnergyTransferPrice { get; set; }
+        public decimal EnergyTransferLowTariffPrice { get; set; }
+        public decimal EnergyTransferHighTariffPrice { get; set; }
+        public decimal LowTariffImportEnergyInKWh { get; set; }
+        public decimal LowTariffExportEnergyInKWh { get; set; }
+        public decimal HighTariffImportEnergyInKWh { get; set; }
+        public decimal HighTariffExportEnergyInKWh { get; set; }
         public decimal FixedPowerPriceIfNo15Minute { get; set; }
         public decimal AgreedPowerPrice { get; set; }
         public decimal OverdraftPowerPrice { get; set; }
         public decimal[] OverdraftPowerPricePerBlock { get; } = new decimal[5];
         public decimal[] AgreedPowerPricePerBlock { get; } = new decimal[5];
-        public decimal[] EnergyPerBlockInKWh { get; } = new decimal[5];
+        public decimal[] EnergyImportPerBlockInKWh { get; } = new decimal[5];
     }
 
     public class DayReport : PeriodReport
@@ -376,7 +141,7 @@ namespace Omreznina.Client.Logic
         public (int Year, int Month) Month { get; }
         public Dictionary<DateOnly, DayReport> DailyReports { get; } = new();
 
-        public MonthlyReport(CalculationOptions calculationOptions, (int Year, int Month) month, List<RawUsage15Min> rawUsages, decimal manualMonthEnergy)
+        public MonthlyReport(CalculationOptions calculationOptions, (int Year, int Month) month, List<RawUsage15Min> rawUsages, ManuallyEnteredMonthlyConsumption? manualMonthEnergy)
         {
             Month = month;
             for (int i = 0; i < 5; i++)
@@ -391,7 +156,7 @@ namespace Omreznina.Client.Logic
                     if (i == 0)
                         continue;
                 }
-                if (calculationOptions.No15MinuteData)
+                if (!calculationOptions.Has15MinuteData)
                 {
                     AgreedPowerPricePerBlock[i] = 0;
                 }
@@ -409,7 +174,7 @@ namespace Omreznina.Client.Logic
             foreach (var usage in rawUsages)
             {
                 var maxUsage = calculationOptions.AgreedMaxPowerBlocks[usage.Block];
-                var overDraftPower = usage.ConsumedPower - maxUsage;
+                var overDraftPower = usage.ImportPower - maxUsage;
                 if (overDraftPower > 0)
                 {
                     overdraftsPerBlock[usage.Block] += overDraftPower;
@@ -431,7 +196,11 @@ namespace Omreznina.Client.Logic
 
             if (rawUsages.Count == 0)
             {
-                if (calculationOptions.No15MinuteData)
+                if (manualMonthEnergy == null)
+                {
+                    throw new InvalidOperationException("No data");
+                }
+                if (!calculationOptions.Has15MinuteData)
                 {
                     FixedPowerPriceIfNo15Minute = BlockPrices.GetCombinedPowerPriceNo15Minutes(calculationOptions);
                 }
@@ -439,8 +208,25 @@ namespace Omreznina.Client.Logic
                 {
                     FixedPowerPriceIfNo15Minute = 0;
                 }
-                EnergyPrice = manualMonthEnergy * BlockPrices.GetCombinedEnergyPriceSingleTariffPerKWH(calculationOptions.IncludeVAT);
-                OldEnergyPrice = manualMonthEnergy * BlockPrices.GetOldEnergyPriceSingleTariffPerKWh(calculationOptions);
+                if (calculationOptions.TwoTariffSystem)
+                {
+                    EnergyTransferHighTariffPrice = manualMonthEnergy.HighTarif * BlockPrices.GetNonBlockTransferEnergyPerKWH(true, calculationOptions);
+                    EnergyTransferLowTariffPrice = manualMonthEnergy.LowTarif * BlockPrices.GetNonBlockTransferEnergyPerKWH(false, calculationOptions);
+                    OldEnergyTransferHighTariffPrice = manualMonthEnergy.HighTarif * BlockPrices.GetOldTransferEnergyPricePerKWH(true, calculationOptions);
+                    OldEnergyTransferLowTariffPrice = manualMonthEnergy.LowTarif * BlockPrices.GetOldTransferEnergyPricePerKWH(false, calculationOptions);
+                    EnergyTransferPrice = EnergyTransferHighTariffPrice + EnergyTransferLowTariffPrice;
+                    OldEnergyTransferPrice = OldEnergyTransferHighTariffPrice + OldEnergyTransferLowTariffPrice;
+                }
+                else
+                {
+                    EnergyTransferHighTariffPrice = 0;
+                    EnergyTransferLowTariffPrice = 0;
+                    OldEnergyTransferHighTariffPrice = 0;
+                    OldEnergyTransferLowTariffPrice = 0;
+
+                    EnergyTransferPrice = manualMonthEnergy.SingleTarif * BlockPrices.GetNonBlockTransferEnergyPerKWH(null, calculationOptions);
+                    OldEnergyTransferPrice = manualMonthEnergy.SingleTarif * BlockPrices.GetOldTransferEnergyPricePerKWH(null, calculationOptions);
+                }
                 return;
             }
             else
@@ -456,29 +242,21 @@ namespace Omreznina.Client.Logic
                     DailyReports[day] = dayReport = new DayReport { Day = day };
                 }
                 var maxUsage = calculationOptions.AgreedMaxPowerBlocks[usage.Block];
-                var overDraftPower = Math.Max(0, usage.ConsumedPower - maxUsage);
+                var overDraftPower = Math.Max(0, usage.ImportPower - maxUsage);
                 var overdraftPrice = overdraftsPerBlock[usage.Block] == 0 ? 0 : OverdraftPowerPricePerBlock[usage.Block] * (overDraftPower / overdraftsPerBlock[usage.Block]);
-
-                var energyTransportPrice = calculationOptions.NetMetering ? 0 : usage.ConsumedEnergy * BlockPrices.GetCombinedEnergyPricePerKWH(calculationOptions, usage.Block);
-                var oldEnergyPrice = calculationOptions.NetMetering ? 0 : usage.ConsumedEnergy * BlockPrices.GetOldTransferEnergyPricePerKWH(calculationOptions, usage.HighTariff);
 
                 dayReport.Usages.Add(
                     new(
                         usage,
                         overDraftPower,
-                        energyTransportPrice,
                         overdraftPrice,
-                        AgreedPowerPricePerBlock[usage.Block] / usageCountPerBlock[usage.Block],
-                        oldEnergyPrice
-                        )
-                    );
+                        AgreedPowerPricePerBlock[usage.Block] / usageCountPerBlock[usage.Block]
+                    ));
             }
 
             var dailyOldPrice = DailyReports.Count == 0 ? 0 : OldFixedPrice / DailyReports.Count;
-            int dayIndex = 0;
             foreach (var dailyUsage in DailyReports.OrderBy(d => d.Key))
             {
-                dailyUsage.Value.Index = dayIndex++;
                 foreach (var usage in dailyUsage.Value.Usages)
                 {
                     dailyUsage.Value.OverdraftPowerPricePerBlock[usage.Source.Block] += usage.OverdraftPrice;
@@ -488,17 +266,65 @@ namespace Omreznina.Client.Logic
 
                     dailyUsage.Value.OldFixedPrice = dailyOldPrice;
 
-                    dailyUsage.Value.EnergyPrice += usage.EnergyTansportPrice;
-                    EnergyPrice += usage.EnergyTansportPrice;
-                    EnergyPerBlockInKWh[usage.Source.Block] += usage.Source.ConsumedEnergy;
+                    EnergyImportPerBlockInKWh[usage.Source.Block] += usage.Source.ImportEnergy;
+                    if (usage.Source.HighTariff)
+                    {
+                        dailyUsage.Value.HighTariffImportEnergyInKWh += usage.Source.ImportEnergy;
+                        HighTariffImportEnergyInKWh += usage.Source.ImportEnergy;
+                        dailyUsage.Value.HighTariffExportEnergyInKWh += usage.Source.ExportEnergy;
+                        HighTariffExportEnergyInKWh += usage.Source.ExportEnergy;
+                    }
+                    else
+                    {
+                        dailyUsage.Value.LowTariffImportEnergyInKWh += usage.Source.ImportEnergy;
+                        LowTariffImportEnergyInKWh += usage.Source.ImportEnergy;
+                        dailyUsage.Value.LowTariffExportEnergyInKWh += usage.Source.ExportEnergy;
+                        LowTariffExportEnergyInKWh += usage.Source.ExportEnergy;
+                    }
+                }
 
-                    //dailyUsage.Value.NetMeteringEnergyInKWh += usage.Source.ConsumedEnergy;
-                    NetMeteringEnergyInKWh += usage.Source.ConsumedEnergy;
-                    //dailyUsage.Value.NetMeteringEnergyInKWh -= usage.Source.GivenEnergy;
-                    NetMeteringEnergyInKWh -= usage.Source.GivenEnergy;
-
-                    dailyUsage.Value.OldEnergyPrice += usage.OldEnergyPrice;
-                    OldEnergyPrice += usage.OldEnergyPrice;
+                if (calculationOptions.NetMetering)
+                {
+                    dailyUsage.Value.EnergyTransferPrice = 0;
+                    EnergyTransferPrice = 0;
+                    dailyUsage.Value.OldEnergyTransferPrice = 0;
+                    OldEnergyTransferPrice = 0;
+                }
+                else
+                {
+                    if (calculationOptions.TwoTariffSystem)
+                    {
+                        dailyUsage.Value.EnergyTransferPrice = dailyUsage.Value.HighTariffImportEnergyInKWh * BlockPrices.GetNonBlockTransferEnergyPerKWH(true, calculationOptions)
+                            + dailyUsage.Value.LowTariffImportEnergyInKWh * BlockPrices.GetNonBlockTransferEnergyPerKWH(false, calculationOptions);
+                        dailyUsage.Value.OldEnergyTransferPrice = dailyUsage.Value.HighTariffImportEnergyInKWh * BlockPrices.GetOldTransferEnergyPricePerKWH(true, calculationOptions)
+                            + dailyUsage.Value.LowTariffImportEnergyInKWh * BlockPrices.GetOldTransferEnergyPricePerKWH(false, calculationOptions);
+                        if (calculationOptions.IncludeEnergyPrice)
+                        {
+                            dailyUsage.Value.EnergyPrice = (dailyUsage.Value.HighTariffImportEnergyInKWh * calculationOptions.HighTariffEnergyPrice
+                                + dailyUsage.Value.LowTariffImportEnergyInKWh * calculationOptions.LowTariffEnergyPrice) * calculationOptions.VATMultiplier;
+                        }
+                        else
+                        {
+                            dailyUsage.Value.EnergyPrice = 0;
+                        }
+                    }
+                    else
+                    {
+                        var singleTariffImportEnergyInKWh = dailyUsage.Value.HighTariffImportEnergyInKWh + dailyUsage.Value.LowTariffImportEnergyInKWh;
+                        dailyUsage.Value.EnergyTransferPrice = singleTariffImportEnergyInKWh * BlockPrices.GetNonBlockTransferEnergyPerKWH(null, calculationOptions);
+                        dailyUsage.Value.OldEnergyTransferPrice = singleTariffImportEnergyInKWh * BlockPrices.GetOldTransferEnergyPricePerKWH(null, calculationOptions);
+                        if (calculationOptions.IncludeEnergyPrice)
+                        {
+                            dailyUsage.Value.EnergyPrice = singleTariffImportEnergyInKWh * calculationOptions.SingleTariffEnergyPrice;
+                        }
+                        else
+                        {
+                            dailyUsage.Value.EnergyPrice = 0;
+                        }
+                    }
+                    EnergyTransferPrice += dailyUsage.Value.EnergyTransferPrice;
+                    OldEnergyTransferPrice += dailyUsage.Value.OldEnergyTransferPrice;
+                    EnergyPrice += dailyUsage.Value.EnergyPrice;
                 }
             }
         }

@@ -1,0 +1,35 @@
+﻿<div>
+    <label class="m-1 btn btn-outline-primary @(Value?"active":"")">
+        <input type="radio"
+               name="@GroupName"
+               checked="@(Value)"
+               @onchange="@(() => ChangeValue(true))" />
+        @YesText
+    </label>
+    <label class="m-1 btn btn-outline-primary @(!Value?"active":"")">
+        <input type="radio"
+               name="@GroupName"
+               checked="@(!Value)"
+               @onchange="@(() => ChangeValue(false))" />
+        @NoText
+    </label>
+</div>
+
+@code {
+    [Parameter]
+    public string YesText { get; set; } = "Da";
+    [Parameter]
+    public string NoText { get; set; } = "Ne";
+    [Parameter]
+    public bool Value { get; set; }
+    [Parameter]
+    public EventCallback<bool> ValueChanged { get; set; }
+
+    private string GroupName => Guid.NewGuid().ToString();
+
+    private void ChangeValue(bool newValue)
+    {
+        Value = newValue;
+        ValueChanged.InvokeAsync(newValue);
+    }
+}

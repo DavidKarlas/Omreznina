@@ -1,0 +1,36 @@
+﻿<div>
+    @foreach (var item in Options)
+    {
+        <label class="m-1 btn btn-outline-primary @(Value==item?"active":"")">
+            <input type="radio"
+                   name="@GroupName"
+                   checked="@(Value==item)"
+                   @onchange="@(() => ChangeValue(item))" />
+            @item
+        </label>
+        @if (VerticalOptions)
+        {
+            <br/>
+        }
+    }
+</div>
+
+@code {
+    [Parameter]
+    [EditorRequired]
+    public IEnumerable<string> Options { get; set; } = [];
+    [Parameter]
+    public bool VerticalOptions { get; set; } = false;
+    [Parameter]
+    public string Value { get; set; }
+    [Parameter]
+    public EventCallback<string> ValueChanged { get; set; }
+
+    private string GroupName => Guid.NewGuid().ToString();
+
+    private void ChangeValue(string newValue)
+    {
+        Value = newValue;
+        ValueChanged.InvokeAsync(newValue);
+    }
+}

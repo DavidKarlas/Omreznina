@@ -49,10 +49,24 @@ namespace Omreznina.Client.Logic
             return CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].OM;
         }
 
-        public static decimal GetOldTransferEnergyPricePerKWH(CalculationOptions calculationOptions, bool highTariff)
+        internal static decimal GetOldTransferEnergyPriceSingleTariffPerKWh(CalculationOptions calculationOptions)
+        {
+            var price = CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].ET;
+            if (calculationOptions.IncludeVAT)
+            {
+                return price * 1.22M;
+            }
+            return price;
+        }
+
+        public static decimal GetOldTransferEnergyPricePerKWH(bool? highTariff, CalculationOptions calculationOptions)
         {
             var priceList = CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema];
-            var tariff = calculationOptions.TwoTariffSystem ? (highTariff ? priceList.VT : priceList.MT) : priceList.ET;
+            var tariff = highTariff switch {
+                true => priceList.VT,
+                false => priceList.MT,
+                null => priceList.ET,
+            };
             if (calculationOptions.IncludeVAT)
             {
                 return tariff * 1.22M;
@@ -60,19 +74,21 @@ namespace Omreznina.Client.Logic
             return tariff;
         }
 
-        internal static decimal GetCombinedEnergyPriceSingleTariffPerKWH(bool includeVAT)
+        internal static decimal GetNonBlockTransferEnergyPerKWH(bool? highTariff, CalculationOptions calculationOptions)
         {
-            // Distro, transfer
-            var price = 0.00607M + 0.01246M;
-            if (includeVAT)
+            var tariff = highTariff switch {
+                true => 0.00623M + 0.01245M,
+                false => 0.00593M + 0.01246M,
+                null => 0.00607M + 0.01246M,
+            };
+            if (calculationOptions.IncludeVAT)
             {
-                return price * 1.22M;
+                return tariff * 1.22M;
             }
-            return price;
+            return tariff;
         }
         internal static decimal GetCombinedPowerPriceNo15Minutes(CalculationOptions calculationOptions)
         {
-            // Distro, transfer
             var price = 0.14326M + 2.14808M;
             if (calculationOptions.BreakersValue.ThreePhase)
             {
@@ -89,16 +105,6 @@ namespace Omreznina.Client.Logic
             {
                 price *= calculationOptions.BreakersValue.PrikljucnaMoc * 0.58M;
             }
-            if (calculationOptions.IncludeVAT)
-            {
-                return price * 1.22M;
-            }
-            return price;
-        }
-
-        internal static decimal GetOldEnergyPriceSingleTariffPerKWh(CalculationOptions calculationOptions)
-        {
-            var price = CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].ET;
             if (calculationOptions.IncludeVAT)
             {
                 return price * 1.22M;

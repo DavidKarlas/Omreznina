@@ -43,9 +43,9 @@ namespace Omreznina.Logic
                     MaxBarWidth=int.MaxValue,
                     IsVisibleAtLegend = false
                 },
-                CreateStackedColumn("Dogovorjeno", 1, UIHelper.AgreedPowerColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.AgreedPowerPrice)),
-                CreateStackedColumn("Energija", 1, UIHelper.EnergyTransferColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.EnergyPrice)),
-                CreateStackedColumn("Prekoračitev", 1, UIHelper.OverdraftColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.OverdraftPowerPrice)),
+                CreateStackedColumn("Omrež. Moč", 1, UIHelper.AgreedPowerColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.AgreedPowerPrice)),
+                CreateStackedColumn("Omrež. Poraba", 1, UIHelper.EnergyTransferColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.EnergyTransferPrice)),
+                CreateStackedColumn("Omrež. Prekoračitev", 1, UIHelper.OverdraftColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.OverdraftPowerPrice)),
                 new StackedColumnSeries<DayReport>
                 {
                     IsVisibleAtLegend = false,
@@ -108,7 +108,7 @@ namespace Omreznina.Logic
 
         public void Update(MonthlyReport monthReport)
         {
-            var allDays = monthReport.DailyReports.Values.OrderBy(d => d.Index).ToArray();
+            var allDays = monthReport.DailyReports.Values.OrderBy(d => d.Day.Day).ToArray();
             if (allDays.Length == 0)
             {
                 IsVisible = false;
@@ -124,12 +124,12 @@ namespace Omreznina.Logic
             {
                 allDays
                     .OrderByDescending(d => d.OverdraftPowerPrice)
-                    .ThenByDescending(d => d.EnergyPrice + d.AgreedPowerPrice)
-                    .ThenBy(d => d.Index)
+                    .ThenByDescending(d => d.EnergyTransferPrice + d.AgreedPowerPrice)
+                    .ThenBy(d => d.Day.Day)
                     .First().IsSelected = true;
             }
             days.SyncCollections(allDays);
-            var maxY = (double)allDays.Max(x => x.EnergyPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
+            var maxY = (double)allDays.Max(x => x.EnergyTransferPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
             var roundedMaxY = Math.Round(maxY * 1.25) + 1;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {

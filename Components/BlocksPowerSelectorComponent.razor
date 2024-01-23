@@ -1,0 +1,76 @@
+﻿@using Omreznina.Client.Logic;
+@using Omreznina.Logic;
+@using Omreznina.Client.Pages
+@using Blazored.Toast.Services;
+@using Omreznina.Shared
+@inject IToastService toastService
+@inject ViewModel ViewModel
+
+<div>
+    <Tooltip2 Text=@($"Blok 1 (kW):")>
+        <h3>Blok 1 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 0).ToEuro(4)/kWh</h3>
+        <span>
+            Blok 1 je v uporabi le od novembra do februarja in sicer med 7:00 in 14:00 ter 16:00 in 20:00.
+            To je daleč najbolj obremenjen in najdražji blok s ceno @BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0).ToEuro() na kW.
+            To pomeni, da za dogovorjeno moč @ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0].ToKW() bo potrebno plačati v mesecih od novembra do februarja @((BlockPrices.GetCombinedPowerPricePerKW(ViewModel.CalculationOptions, 0) * ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]).ToEuro()) ne glede na količino porabljene elektrike.
+        </span>
+    </Tooltip2>
+    <InputNumber step="@Power1StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[0]" style="width: 60px;" />
+</div>
+<div>
+    <Tooltip2 Text=@($"Blok 2 (kW):")>
+        <h3>Blok 2 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 1).ToEuro(4)/kWh</h3>
+        <span>
+            Blok bla bla.
+        </span>
+    </Tooltip2>
+    <InputNumber step="@Power2StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[1]" style="width: 60px;" />
+</div>
+<div>
+    <Tooltip2 Text=@($"Blok 3 (kW):")>
+        <h3>Blok 3 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 2).ToEuro(4)/kWh</h3>
+        <span>
+            Blok bla bla.
+        </span>
+    </Tooltip2>
+    <InputNumber step="@Power3StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[2]" style="width: 60px;" />
+</div>
+<div>
+    <Tooltip2 Text=@($"Blok 4 (kW):")>
+        <h3>Blok 4 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 3).ToEuro(4)/kWh</h3>
+        <span>
+            Blok bla bla.
+        </span>
+    </Tooltip2>
+    <InputNumber step="@Power4StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[3]" style="width: 60px;" />
+</div>
+<div>
+    <Tooltip2 Text=@($"Blok 5 (kW):")>
+        <h3>Blok 5 - @BlockPrices.GetCombinedEnergyPricePerKWH(ViewModel.CalculationOptions, 4).ToEuro(4)/kWh</h3>
+        <span>
+            Blok bla bla.
+        </span>
+    </Tooltip2>
+    <InputNumber step="@Power5StepSize" @bind-Value="ViewModel.CalculationOptions.AgreedMaxPowerBlocks[4]" style="width: 60px;" />
+</div>
+@code {
+    private string GetBlockStepSize(int block)
+    {
+        var currentPower = ViewModel.CalculationOptions.AgreedMaxPowerBlocks[block];
+        if (currentPower > 20 && currentPower % 1 == 0)
+        {
+            return "1";
+        }
+        if (currentPower > 5 && currentPower % 0.5M == 0)
+        {
+            return "0.5";
+        }
+        return "0.1";
+    }
+
+    private string Power1StepSize => GetBlockStepSize(0);
+    private string Power2StepSize => GetBlockStepSize(1);
+    private string Power3StepSize => GetBlockStepSize(2);
+    private string Power4StepSize => GetBlockStepSize(3);
+    private string Power5StepSize => GetBlockStepSize(4);
+}

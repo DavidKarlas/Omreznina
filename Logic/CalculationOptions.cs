@@ -24,6 +24,9 @@ namespace Omreznina.Client.Logic
             ("43kW (3x63 A)", 43, 43, 43, true, 63)
             ];
 
+        public static string[] SolarPowerPlantOptions => ["Nimam", "Imam", "Želel bi izračun"];
+        public string SolarPowerPlant { get; set; } = "Nimam";
+
         public string MeterType
         {
             get => meterType;

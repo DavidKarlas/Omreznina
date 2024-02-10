@@ -30,7 +30,7 @@ namespace Omreznina.Client.Logic
             LowTariffImportEnergyInKWh = MonthlyReports.Sum(m => m.LowTariffImportEnergyInKWh);
             LowTariffExportEnergyInKWh = MonthlyReports.Sum(m => m.LowTariffExportEnergyInKWh);
 
-            if (calculationOptions.NetMetering)
+            if (calculationOptions.SolarPowerPlant == "Imam" && calculationOptions.NetMetering)
             {
                 var netMeteringEnergyInKWh = HighTariffImportEnergyInKWh
                     - HighTariffExportEnergyInKWh
@@ -283,7 +283,7 @@ namespace Omreznina.Client.Logic
                     }
                 }
 
-                if (calculationOptions.NetMetering)
+                if (calculationOptions.SolarPowerPlant == "Imam" && calculationOptions.NetMetering)
                 {
                     dailyUsage.Value.EnergyTransferPrice = 0;
                     EnergyTransferPrice = 0;

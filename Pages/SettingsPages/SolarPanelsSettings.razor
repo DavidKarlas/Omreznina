@@ -31,5 +31,17 @@
     {
         <span>Žal je simulacija za izračun nove sončne elektrarne še v razvoju.</span>
     }
-    <NavigationButtonsComponent />
+    <NavigationButtonsComponent ValidateNextButton="ValidateSettings" />
 </div>
+
+
+@code {
+    private bool ValidateSettings()
+    {
+        if (ViewModel.CalculationOptions.SolarPowerPlant == "Želel bi izračun")
+        {
+            return false;
+        }
+        return true;
+    }
+}

@@ -246,7 +246,7 @@ namespace Omreznina.Client.Logic
                 obracunskaMoc = value;
                 if (MeterType == "Drugo")
                 {
-                    AgreedMaxPowerBlocks.SetVarovalkePower(999, true, ObracunskaMoc);
+                    AgreedMaxPowerBlocks.SetVarovalkePower(ObracunskaMoc, true, ObracunskaMoc);
                 }
                 else
                 {

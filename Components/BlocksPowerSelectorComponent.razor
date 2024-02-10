@@ -68,6 +68,14 @@
         return "0.1";
     }
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        ViewModel.CalculationOptions.AgreedMaxPowerBlocks.CollectionChanged += (s, e) => {
+            StateHasChanged();
+        };
+    }
+
     private string Power1StepSize => GetBlockStepSize(0);
     private string Power2StepSize => GetBlockStepSize(1);
     private string Power3StepSize => GetBlockStepSize(2);

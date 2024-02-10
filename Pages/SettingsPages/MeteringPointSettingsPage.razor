@@ -147,6 +147,12 @@
                 return false;
             }
         }
+
+        if (!ViewModel.EnteredCalculatorOnce)
+        {
+            ViewModel.CalculationOptions.AgreedMaxPowerBlocks.ResetToMinimal();
+        }
+
         return true;
     }
 }

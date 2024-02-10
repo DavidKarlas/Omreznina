@@ -116,7 +116,7 @@ namespace Omreznina.Client.Logic
             {
                 for (int i = 0; i < 5; i++)
                 {
-                    this[i] = minimumPowerForBlocks;
+                    SetItem(i, minimumPowerForBlocks);
                 }
             }
 

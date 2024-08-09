@@ -12,7 +12,7 @@ namespace Omreznina.Logic
 {
     public class DaysViewModel
     {
-        private readonly ObservableCollection<DayReport> days = new();
+        private readonly ObservableCollection<BothDayReports> days = new();
 
         public int DataLabelsTotalSize { get; set; } = 12;
         public int DataLabelsSize { get; set; } = 12;
@@ -32,21 +32,39 @@ namespace Omreznina.Logic
         public DaysViewModel()
         {
             Series = [
-               new ColumnSeries<DayReport>
+               new ColumnSeries<BothDayReports>
                {
                     IsHoverable = false, // disables the series from the tooltips // mark
                     Values = days,
-                    Mapping = (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, day.IsSelected?1000000:0),
+                    Mapping = (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, day.Right.IsSelected?1000000:0),
                     Stroke = null,
                     Fill = new SolidColorPaint( "#2196f3".ToPaint().Color.WithAlpha(170),0),
                     IgnoresBarPosition = true,
                     MaxBarWidth=int.MaxValue,
                     IsVisibleAtLegend = false
                 },
-                CreateStackedColumn("Omrež. Moč", 1, UIHelper.AgreedPowerColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.AgreedPowerPrice)),
-                CreateStackedColumn("Omrež. Poraba", 1, UIHelper.EnergyTransferColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.EnergyTransferPrice)),
-                CreateStackedColumn("Omrež. Prekoračitev", 1, UIHelper.OverdraftColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.OverdraftPowerPrice)),
-                new StackedColumnSeries<DayReport>
+                CreateStackedColumn("Omrež. Moč", 0, UIHelper.AgreedPowerColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Left.AgreedPowerPrice)),
+                CreateStackedColumn("Omrež. Poraba", 0, UIHelper.EnergyTransferColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Left.EnergyTransferPrice)),
+                CreateStackedColumn("Omrež. Prekoračitev", 0, UIHelper.OverdraftColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Left.OverdraftPowerPrice)),
+                new StackedColumnSeries<BothDayReports>
+                {
+                    IsVisibleAtLegend = false,
+                    Name="Suma",
+                    Values = days,
+                    Mapping = (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, 0),
+                    Stroke = null,
+                    StackGroup = 0,
+                    DataLabelsSize=DataLabelsTotalSize,
+                    DataLabelsFormatter=point => ((decimal)point.StackedValue.Total).ToEuro(),
+                    DataLabelsPaint =TotalDataLabelPaint,
+                    DataLabelsPosition = DataLabelsPosition.Top,
+                    YToolTipLabelFormatter = point => ((decimal)point.StackedValue.Total).ToEuro(),
+                    MaxBarWidth = 55
+                },
+                CreateStackedColumn("Omrež. Moč", 1, UIHelper.AgreedPowerColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Right.AgreedPowerPrice)),
+                CreateStackedColumn("Omrež. Poraba", 1, UIHelper.EnergyTransferColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Right.EnergyTransferPrice)),
+                CreateStackedColumn("Omrež. Prekoračitev", 1, UIHelper.OverdraftColor, days, (day, index) => new LiveChartsCore.Kernel.Coordinate(day.Day.Day, (double)day.Right.OverdraftPowerPrice)),
+                new StackedColumnSeries<BothDayReports>
                 {
                     IsVisibleAtLegend = false,
                     Name="Suma",
@@ -71,9 +89,9 @@ namespace Omreznina.Logic
             }];
         }
 
-        private StackedColumnSeries<DayReport> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<DayReport> values, Func<DayReport, int, LiveChartsCore.Kernel.Coordinate> mapping)
+        private StackedColumnSeries<BothDayReports> CreateStackedColumn(string name, int stackGroup, SolidColorPaint color, IEnumerable<BothDayReports> values, Func<BothDayReports, int, LiveChartsCore.Kernel.Coordinate> mapping)
         {
-            return new StackedColumnSeries<DayReport> {
+            return new StackedColumnSeries<BothDayReports> {
                 Name = name,
                 Values = values,
                 Stroke = null,
@@ -106,9 +124,17 @@ namespace Omreznina.Logic
 
         private MonthlyReport previouslySelectedMonth;
 
-        public void Update(MonthlyReport monthReport)
+        class BothDayReports
         {
-            var allDays = monthReport.DailyReports.Values.OrderBy(d => d.Day.Day).ToArray();
+            public DayReport Left { get; set; }
+            public DayReport Right { get; set; }
+            public DateOnly Day { get; set; }
+        }
+
+        public void Update(MonthlyReport leftReport, MonthlyReport rightReport)
+        {
+            var allDays = leftReport.DailyReports.Select(p => new BothDayReports() { Day = p.Key, Left = p.Value, Right = rightReport.DailyReports[p.Key] }).OrderBy(p => p.Day).ToArray();
+
             if (allDays.Length == 0)
             {
                 IsVisible = false;
@@ -119,23 +145,23 @@ namespace Omreznina.Logic
                 IsVisible = true;
             }
 
-            Title.Text = $"{UIHelper.MonthConverter(monthReport.Month.Month, false)} - {monthReport.Month.Year}";
-            if (!allDays.Any(d => d.IsSelected))
+            Title.Text = $"{UIHelper.MonthConverter(leftReport.Month.Month, false)} - {leftReport.Month.Year}";
+            if (!allDays.Any(d => d.Right.IsSelected))
             {
                 allDays
-                    .OrderByDescending(d => d.OverdraftPowerPrice)
-                    .ThenByDescending(d => d.EnergyTransferPrice + d.AgreedPowerPrice)
+                    .OrderByDescending(d => d.Right.OverdraftPowerPrice)
+                    .ThenByDescending(d => d.Right.EnergyTransferPrice + d.Right.AgreedPowerPrice)
                     .ThenBy(d => d.Day.Day)
-                    .First().IsSelected = true;
+                    .First().Right.IsSelected = true;
             }
             days.SyncCollections(allDays);
-            var maxY = (double)allDays.Max(x => x.EnergyTransferPrice + x.OverdraftPowerPrice + x.AgreedPowerPrice);
+            var maxY = (double)allDays.Max(x => Math.Max(x.Left.TotalPrice, x.Right.TotalPrice));
             var roundedMaxY = Math.Round(maxY * 1.25) + 1;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
                 YAxis[0].MaxLimit = roundedMaxY;
             }
-            previouslySelectedMonth = monthReport;
+            previouslySelectedMonth = leftReport;
         }
     }
 }

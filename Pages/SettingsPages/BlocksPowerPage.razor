@@ -6,6 +6,10 @@
     <h1>Vnos moči blokov</h1>
     <span>Če imate dostop do MojElektro.si pod zavihkom "Dogovorjena/obračunska moč" merilnega mesta lahko vidite moči blokov katere je elektro distributer izračunal na podlagi pretekle porabe.</span>
     <span>Če nimate dostopa do MojElektro.si, lahko ta podatek dobite na elektro računu. Nekateri dobavitelji to objavijo na vseh računih npr. Petrol, nekateri pa le v zakonsko obveznih mesecih junij, julij in avgust, npr. Gen-i.</span>
-    <BlocksPowerSelectorComponent />
+    <BlocksPowerSelectorComponent IsLeftSide="IsLeftSide" />
     <NavigationButtonsComponent />
 </div>
+@code {
+    [Parameter]
+    public bool IsLeftSide { get; set; }
+}

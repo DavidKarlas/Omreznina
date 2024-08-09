@@ -39,41 +39,6 @@ namespace Omreznina.Client.Logic
             }
         }
 
-
-        public static decimal GetFixedPricePerKW(CalculationOptions calculationOptions)
-        {
-            if (calculationOptions.IncludeVAT)
-            {
-                return CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].OM * 1.22M;
-            }
-            return CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].OM;
-        }
-
-        internal static decimal GetOldTransferEnergyPriceSingleTariffPerKWh(CalculationOptions calculationOptions)
-        {
-            var price = CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema].ET;
-            if (calculationOptions.IncludeVAT)
-            {
-                return price * 1.22M;
-            }
-            return price;
-        }
-
-        public static decimal GetOldTransferEnergyPricePerKWH(bool? highTariff, CalculationOptions calculationOptions)
-        {
-            var priceList = CalculationOptions.OldPriceList[calculationOptions.ConnectionType][calculationOptions.VrstaOdjema];
-            var tariff = highTariff switch {
-                true => priceList.VT,
-                false => priceList.MT,
-                null => priceList.ET,
-            };
-            if (calculationOptions.IncludeVAT)
-            {
-                return tariff * 1.22M;
-            }
-            return tariff;
-        }
-
         internal static decimal GetNonBlockTransferEnergyPerKWH(bool? highTariff, CalculationOptions calculationOptions)
         {
             var tariff = highTariff switch {

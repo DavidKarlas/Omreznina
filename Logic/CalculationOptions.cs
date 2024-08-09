@@ -24,8 +24,21 @@ namespace Omreznina.Client.Logic
             ("43kW (3x63 A)", 43, 43, 43, true, 63)
             ];
 
-        public static string[] SolarPowerPlantOptions => ["Nimam", "Imam", "Želel bi izračun"];
-        public string SolarPowerPlant { get; set; } = "Nimam";
+        public static string[] SolarPowerPlantOptions => ["Ne", "Da"];
+        public bool SolarPowerPlant { get; set; } = true;
+        public double SolarPowerPlantPower { get; set; } = 11.0;
+        public bool Batteries { get; set; } = false;
+        public double BatteriesCapacityInKWh { get; set; } = 10.0;
+
+        public bool ElectricCar { get; set; } = false;
+        public int ElectricCarThousandKMsPerYear { get; set; } = 15;
+
+        public bool HeatPump { get; set; } = false;
+        public double HeatPumpPower { get; set; } = 11.0;
+
+
+        [ObservableProperty]
+        private bool enteredCalculatorOnce = false;
 
         public string MeterType
         {
@@ -66,6 +79,7 @@ namespace Omreznina.Client.Logic
                 UserGroup = int.Parse(value.Substring(value.Length - 1));
             }
         }
+
         public int UserGroup { get; private set; } = 0;
         public string VrstaOdjema { get; set; } = "Gospodinjstvo";
 
@@ -200,17 +214,6 @@ namespace Omreznina.Client.Logic
         public int SimulationYear { get; set; } = 2024;
         public bool IncludeVAT { get; set; } = false;
         public decimal VATMultiplier { get => IncludeVAT ? 1.22M : 1M; }
-        public bool NetMetering
-        {
-            get => netMetering; set
-            {
-                netMetering = value;
-                if (value)
-                {
-                    TwoTariffSystem = false;
-                }
-            }
-        }
 
         private string? breakersText = null;
         private bool netMetering = false;
@@ -261,7 +264,7 @@ namespace Omreznina.Client.Logic
 
         public bool TwoTariffSystem { get; set; } = true;
         [ObservableProperty]
-        public bool includeEnergyPrice = false;
+        public bool includeEnergyPrice = true;
         [ObservableProperty]
         public decimal highTariffEnergyPrice = 0.11800M;
         [ObservableProperty]

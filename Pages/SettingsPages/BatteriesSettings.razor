@@ -1,0 +1,42 @@
+﻿@using Omreznina.Components
+@using Omreznina.Client.Logic
+@using Omreznina.Logic
+@inject ViewModel ViewModel
+<div class="d-flex flex-column mt-3 justify-content-center align-items-center">
+    <h1>Baterije</h1>
+    <table cellpadding="3">
+        <tr>
+            <td align="right">
+                <span>Ali želite dodati tudi baterije?</span>
+            </td>
+            <td>
+                <YesNoRadioButtonComponent @bind-Value="calculationOptions.Batteries" />
+            </td>
+        </tr>
+        @if (calculationOptions.Batteries)
+        {
+
+            <tr>
+                <td align="right">
+                    <span>Velikost baterij v kWh:</span>
+                </td>
+                <td>
+                    <InputNumber step="1" @bind-Value="@calculationOptions.BatteriesCapacityInKWh" style="width: 60px;" />
+                </td>
+            </tr>
+        }
+        }
+    </table>
+    <NavigationButtonsComponent />
+</div>
+@code {
+    [Parameter]
+    public bool IsLeftSide { get; set; }
+
+    private CalculationOptions calculationOptions;
+    protected override void OnInitialized()
+    {
+        calculationOptions = ViewModel.RightCalculationOptions;
+        base.OnInitialized();
+    }
+}

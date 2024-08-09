@@ -1,40 +1,43 @@
 ﻿@using Omreznina.Components
+@using Omreznina.Client.Logic
 @using Omreznina.Logic
 @inject ViewModel ViewModel
 
 <div class="d-flex flex-column  mt-3 justify-content-center align-items-center">
     <h1>Cena eletrične energije</h1>
-    <span>Ali želite v izračun vkjučiti tudi ceno električne energije?</span>
-    <div>
-        <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.IncludeEnergyPrice?"active":"")">
-            <input type="radio"
-                   name="includeEnergyPrice"
-                   checked="@(ViewModel.CalculationOptions.IncludeEnergyPrice)"
-                   @onchange="@(() => ViewModel.CalculationOptions.IncludeEnergyPrice = true)" />
-            Da
-        </label>
-        <label class="m-1 btn btn-outline-primary @(!ViewModel.CalculationOptions.IncludeEnergyPrice?"active":"")">
-            <input type="radio"
-                   name="includeEnergyPrice"
-                   checked="@(!ViewModel.CalculationOptions.IncludeEnergyPrice)"
-                   @onchange="@(() => ViewModel.CalculationOptions.IncludeEnergyPrice = false)" />
-            Ne
-        </label>
-    </div>
-    @if (ViewModel.CalculationOptions.IncludeEnergyPrice)
+@*     <span>Ali želite v izračun vkjučiti tudi ceno električne energije?</span>
+    <YesNoRadioButtonComponent NoText="Ne"
+                               YesText="Da"
+                               @bind-Value="calculationOptions.IncludeEnergyPrice" /> *@
+    @if (calculationOptions.IncludeEnergyPrice)
     {
-        @if (ViewModel.CalculationOptions.TwoTariffSystem)
+        @if (calculationOptions.TwoTariffSystem)
         {
             <span>Cena višje tarife(brez DDV):</span>
-            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.HighTariffEnergyPrice" />
+            <InputNumber step="0.001" @bind-Value="calculationOptions.HighTariffEnergyPrice" />
             <span>Cena nižje tarife(brez DDV):</span>
-            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.LowTariffEnergyPrice" />
+            <InputNumber step="0.001" @bind-Value="calculationOptions.LowTariffEnergyPrice" />
         }
         else
         {
             <span>Cena enotne tarife(brez DDV):</span>
-            <InputNumber step="0.001" @bind-Value="ViewModel.CalculationOptions.SingleTariffEnergyPrice" />
+            <InputNumber step="0.001" @bind-Value="calculationOptions.SingleTariffEnergyPrice" />
         }
     }
     <NavigationButtonsComponent />
 </div>
+
+@code {
+    [Parameter]
+    public bool IsLeftSide { get; set; }
+
+    private CalculationOptions calculationOptions;
+    protected override void OnInitialized()
+    {
+        if (IsLeftSide)
+            calculationOptions = ViewModel.LeftCalculationOptions;
+        else
+            calculationOptions = ViewModel.RightCalculationOptions;
+        base.OnInitialized();
+    }
+}

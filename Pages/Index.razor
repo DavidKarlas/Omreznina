@@ -27,7 +27,7 @@
         <div class="top-row px-4" style=" visibility:@(ViewModel.CurrentPage.Name == "Kalkulator" ? "visible" : "hidden");">
             <div style="margin-right:auto;">
                 <EditForm style="margin-right:auto;" EditContext="_editContext">
-                    <fieldset disabled="@(!ViewModel.CalculationOptions.Has15MinuteData)">
+                    <fieldset disabled="@(!ViewModel.Has15MinuteData)">
                         <div class="d-flex align-items-baseline">
                             <div>
                                 <Tooltip3>
@@ -59,16 +59,35 @@
         </div>
 
         <article class="content px-4">
-            <DynamicComponent Type="@ViewModel.CurrentPage.Component" />
+            @if (ViewModel.CurrentPage.SplitPage)
+            {
+                <div class="row">
+                    <div class="col-6">
+                        <h1 class="text-center">Trenutno stanje</h1>
+                        <DynamicComponent Parameters="LeftParameters" Type="@ViewModel.CurrentPage.Component" />
+                    </div>
+                    <div class="col-6">
+                        <h1 class="text-center">Novo stanje</h1>
+                        <DynamicComponent Parameters="RightParameters" Type="@ViewModel.CurrentPage.Component" />
+                    </div>
+                </div>
+            }
+            else
+            {
+                <DynamicComponent Type="@ViewModel.CurrentPage.Component" />
+            }
         </article>
     </main>
 </div>
 
 @code {
+    private Dictionary<string, object> LeftParameters = new() { { "IsLeftSide", true } };
+    private Dictionary<string, object> RightParameters = new() { { "IsLeftSide", false } };
+
     private EditContext? _editContext;
     protected override void OnInitialized()
     {
-        _editContext = new EditContext(ViewModel.CalculationOptions);
+        _editContext = new EditContext(ViewModel);
         _editContext.OnFieldChanged += OnFormUpdated;
         ViewModel.PropertyChanged += (s, e) => {
             if (e.PropertyName == "CurrentPage")
@@ -96,7 +115,7 @@
         {
             return "active btn-primary";
         }
-        if (!ViewModel.EnteredCalculatorOnce && Array.IndexOf(SubPageInfo.SubPages, subPage) > Array.IndexOf(SubPageInfo.SubPages, ViewModel.CurrentPage))
+        if (!ViewModel.FocusedCalculationOptions.EnteredCalculatorOnce && Array.IndexOf(SubPageInfo.SubPages, subPage) > Array.IndexOf(SubPageInfo.SubPages, ViewModel.CurrentPage))
         {
             return "disabled btn-secondary";
         }

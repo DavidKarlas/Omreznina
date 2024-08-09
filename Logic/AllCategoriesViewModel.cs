@@ -12,9 +12,6 @@ namespace Omreznina.Logic
 {
     public class AllCategoriesViewModel
     {
-        private readonly ObservableCollection<decimal> oldFixed = new([0, 0]);
-        private readonly ObservableCollection<decimal> oldEnergy = new([0, 0]);
-
         private readonly ObservableCollection<decimal> fixedPowerPriceNo15MinMesures = new([0, 0]);
         private readonly ObservableCollection<decimal> agreedPowerPriceBlok1 = new([0, 0]);
         private readonly ObservableCollection<decimal> agreedPowerPriceBlok2 = new([0, 0]);
@@ -34,7 +31,7 @@ namespace Omreznina.Logic
 
         public LabelVisual Title { get; set; } =
             new LabelVisual {
-                Text = "Skupna primerjava omrežnine",
+                Text = "Skupna primerjava stroškov",
                 TextSize = 16,
                 Paint = new SolidColorPaint(SKColors.DarkSlateGray)
             };
@@ -42,8 +39,8 @@ namespace Omreznina.Logic
         public AllCategoriesViewModel()
         {
             YAxis = [new Axis {
-                Labels = ["Nov obračun", "Star obračun"],
-                Padding= new LiveChartsCore.Drawing.Padding(0,-15,5,-15),
+                Labels = ["Novi stroški", "Trenutni stroški"],
+                Padding= new LiveChartsCore.Drawing.Padding(0, -15, 5, -15),
                 ShowSeparatorLines = false,
                 TextSize = 13,
             }];
@@ -52,8 +49,6 @@ namespace Omreznina.Logic
                 LabelsPaint=null
             }];
             Series = [
-                    CreateStackedColumn("Star obračun: Omrežnina Moč", 1, UIHelper.AgreedPowerColor, oldFixed),
-                    CreateStackedColumn("Star obračun: Omrežnina Poraba", 1, UIHelper.EnergyTransferColor, oldEnergy),
                     CreateStackedColumn("Omrežnina Moč", 1, UIHelper.AgreedPowerColor, fixedPowerPriceNo15MinMesures),
                     CreateStackedColumn("Blok 1", 1, UIHelper.AgreedPowerBlockColors[0], agreedPowerPriceBlok1),
                     CreateStackedColumn("Blok 2", 1, UIHelper.AgreedPowerBlockColors[1], agreedPowerPriceBlok2),
@@ -108,18 +103,9 @@ namespace Omreznina.Logic
             };
         }
 
-        public void Update(OmrezninaReport mainReport)
+        public void Update(OmrezninaReport leftReport, OmrezninaReport rightReport)
         {
-            if (mainReport.CalculationOptions.IncludeEnergyPrice)
-            {
-                Series[8].IsVisibleAtLegend = true;
-            }
-            else
-            {
-                Series[8].IsVisibleAtLegend = false;
-            }
-
-            if (!mainReport.CalculationOptions.Has15MinuteData)
+            if (!leftReport.CalculationOptions.Has15MinuteData)
             {
                 Series[2].IsVisibleAtLegend = true;
 
@@ -146,52 +132,46 @@ namespace Omreznina.Logic
                 Series[^2].IsVisibleAtLegend = true;
             }
 
-            if (mainReport.FixedPowerPriceIfNo15Minute != fixedPowerPriceNo15MinMesures[0])
-                fixedPowerPriceNo15MinMesures[0] = mainReport.FixedPowerPriceIfNo15Minute;
-
-            if (mainReport.EnergyTransferPrice != energyTransferPrice[0])
-                energyTransferPrice[0] = mainReport.EnergyTransferPrice;
-
-            if (mainReport.EnergyPrice != energyPrice[0])
-                energyPrice[0] = mainReport.EnergyPrice;
-            if (mainReport.EnergyPrice != energyPrice[1])
-                energyPrice[1] = mainReport.EnergyPrice;
-
-            if (mainReport.AgreedPowerPricePerBlock[0] != agreedPowerPriceBlok1[0])
-                agreedPowerPriceBlok1[0] = mainReport.AgreedPowerPricePerBlock[0];
-            if (mainReport.AgreedPowerPricePerBlock[1] != agreedPowerPriceBlok2[0])
-                agreedPowerPriceBlok2[0] = mainReport.AgreedPowerPricePerBlock[1];
-            if (mainReport.AgreedPowerPricePerBlock[2] != agreedPowerPriceBlok3[0])
-                agreedPowerPriceBlok3[0] = mainReport.AgreedPowerPricePerBlock[2];
-            if (mainReport.AgreedPowerPricePerBlock[3] != agreedPowerPriceBlok4[0])
-                agreedPowerPriceBlok4[0] = mainReport.AgreedPowerPricePerBlock[3];
-
-            if (mainReport.OverdraftPowerPricePerBlock[0] != overdraftPriceBlok1[0])
-                overdraftPriceBlok1[0] = mainReport.OverdraftPowerPricePerBlock[0];
-            if (mainReport.OverdraftPowerPricePerBlock[1] != overdraftPriceBlok2[0])
-                overdraftPriceBlok2[0] = mainReport.OverdraftPowerPricePerBlock[1];
-            if (mainReport.OverdraftPowerPricePerBlock[2] != overdraftPriceBlok3[0])
-                overdraftPriceBlok3[0] = mainReport.OverdraftPowerPricePerBlock[2];
-            if (mainReport.OverdraftPowerPricePerBlock[3] != overdraftPriceBlok4[0])
-                overdraftPriceBlok4[0] = mainReport.OverdraftPowerPricePerBlock[3];
-
-            if (mainReport.OldFixedPrice != oldFixed[1])
-                oldFixed[1] = mainReport.OldFixedPrice;
-            if (mainReport.OldEnergyTransferPrice != oldEnergy[1])
-                oldEnergy[1] = mainReport.OldEnergyTransferPrice;
+            UpdateData(leftReport, 1);
+            UpdateData(rightReport, 0);
 
             var maxValue = (double)Math.Max(
-                mainReport.OldFixedPrice + 
-                mainReport.OldEnergyTransferPrice +
-                mainReport.EnergyPrice,
-
-                mainReport.EnergyTransferPrice + 
-                mainReport.OverdraftPowerPrice +
-                mainReport.AgreedPowerPrice +
-                mainReport.FixedPowerPriceIfNo15Minute +
-                mainReport.EnergyPrice);
+                leftReport.TotalPrice,
+                rightReport.TotalPrice);
             if (maxValue != XAxis[0].MaxLimit)
                 XAxis[0].MaxLimit = maxValue * 1.05;
+        }
+
+        private void UpdateData(OmrezninaReport report, int index)
+        {
+            if (report.FixedPowerPriceIfNo15Minute != fixedPowerPriceNo15MinMesures[index])
+                fixedPowerPriceNo15MinMesures[index] = report.FixedPowerPriceIfNo15Minute;
+
+            if (report.EnergyTransferPrice != energyTransferPrice[index])
+                energyTransferPrice[index] = report.EnergyTransferPrice;
+
+            if (report.EnergyPrice != energyPrice[index])
+                energyPrice[index] = report.EnergyPrice;
+            if (report.EnergyPrice != energyPrice[1])
+                energyPrice[1] = report.EnergyPrice;
+
+            if (report.AgreedPowerPricePerBlock[index] != agreedPowerPriceBlok1[index])
+                agreedPowerPriceBlok1[index] = report.AgreedPowerPricePerBlock[index];
+            if (report.AgreedPowerPricePerBlock[1] != agreedPowerPriceBlok2[index])
+                agreedPowerPriceBlok2[index] = report.AgreedPowerPricePerBlock[1];
+            if (report.AgreedPowerPricePerBlock[2] != agreedPowerPriceBlok3[index])
+                agreedPowerPriceBlok3[index] = report.AgreedPowerPricePerBlock[2];
+            if (report.AgreedPowerPricePerBlock[3] != agreedPowerPriceBlok4[index])
+                agreedPowerPriceBlok4[index] = report.AgreedPowerPricePerBlock[3];
+
+            if (report.OverdraftPowerPricePerBlock[index] != overdraftPriceBlok1[index])
+                overdraftPriceBlok1[index] = report.OverdraftPowerPricePerBlock[index];
+            if (report.OverdraftPowerPricePerBlock[1] != overdraftPriceBlok2[index])
+                overdraftPriceBlok2[index] = report.OverdraftPowerPricePerBlock[1];
+            if (report.OverdraftPowerPricePerBlock[2] != overdraftPriceBlok3[index])
+                overdraftPriceBlok3[index] = report.OverdraftPowerPricePerBlock[2];
+            if (report.OverdraftPowerPricePerBlock[3] != overdraftPriceBlok4[index])
+                overdraftPriceBlok4[index] = report.OverdraftPowerPricePerBlock[3];
         }
     }
 }

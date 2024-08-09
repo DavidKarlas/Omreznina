@@ -86,7 +86,8 @@
     protected override void OnInitialized()
     {
         base.OnInitialized();
-        ViewModel.CalculationOptions.AgreedMaxPowerBlocks.ErrorMessage += AgreedMaxBlocksMessage;
+        ViewModel.LeftCalculationOptions.AgreedMaxPowerBlocks.ErrorMessage += AgreedMaxBlocksMessage;
+        ViewModel.RightCalculationOptions.AgreedMaxPowerBlocks.ErrorMessage += AgreedMaxBlocksMessage;
 
         ViewModel.PropertyChanged += (s,e)=>{
             StateHasChanged();

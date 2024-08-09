@@ -12,11 +12,11 @@
             <td style="text-align: end;">Tip merilnega mesta:</td>
             <td>
                 <MultiValueRadioButtonComponent 
-                    @bind-Value="ViewModel.CalculationOptions.MeterType"
+                    @bind-Value="calculationOptions.MeterType"
                     Options="CalculationOptions.AllMeterTypes"/>
             </td>
         </tr>
-        @if (Array.IndexOf(CalculationOptions.AllMeterTypes, ViewModel.CalculationOptions.MeterType) < 2)
+        @if (Array.IndexOf(CalculationOptions.AllMeterTypes, calculationOptions.MeterType) < 2)
         {
             <tr>
                 <td style="text-align: end;">
@@ -29,7 +29,7 @@
                     <YesNoRadioButtonComponent 
                         NoText="Ne omogoča" 
                         YesText="Omogoča"
-                        @bind-Value="ViewModel.CalculationOptions.Has15MinuteData" />
+                        @bind-Value="calculationOptions.Has15MinuteData" />
                 </td>
                 </tr>
                 <tr>
@@ -42,7 +42,7 @@
                     <YesNoRadioButtonComponent 
                         YesText="Nižja/Višja tarifa" 
                         NoText="Enotna tarifa"
-                        @bind-Value="ViewModel.CalculationOptions.TwoTariffSystem" />
+                        @bind-Value="calculationOptions.TwoTariffSystem" />
                 </td>
             </tr>
             <tr>
@@ -64,11 +64,11 @@
                                     @if (group.Count() == 2)
                                     {
                                         var textSinglePhase = group.Single(m => !m.ThreePhase).Text;
-                                        <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.BreakersText == textSinglePhase?"active":"")">
+                                        <label class="m-1 btn btn-outline-primary @(calculationOptions.BreakersText == textSinglePhase?"active":"")">
                                             <input type="radio"
-                                                   name="breakers"
-                                                   checked="@(ViewModel.CalculationOptions.BreakersText == textSinglePhase)"
-                                                   @onchange="@(() => ViewModel.CalculationOptions.BreakersText = textSinglePhase)" />
+                                                   name="breakers-@IsLeftSide"
+                                                   checked="@(calculationOptions.BreakersText == textSinglePhase)"
+                                                   @onchange="@(() => calculationOptions.BreakersText = textSinglePhase)" />
                                             @textSinglePhase
                                         </label>
                                     }
@@ -77,11 +77,11 @@
                                     @{
                                         var textThreePhase = group.Single(m => m.ThreePhase).Text;
                                     }
-                                    <label class="m-1 btn btn-outline-primary @(ViewModel.CalculationOptions.BreakersText == textThreePhase?"active":"")">
+                                    <label class="m-1 btn btn-outline-primary @(calculationOptions.BreakersText == textThreePhase?"active":"")">
                                         <input type="radio"
-                                               name="breakers"
-                                               checked="@(ViewModel.CalculationOptions.BreakersText == textThreePhase)"
-                                               @onchange="@(() => ViewModel.CalculationOptions.BreakersText = textThreePhase)" />
+                                               name="breakers-@IsLeftSide"
+                                               checked="@(calculationOptions.BreakersText == textThreePhase)"
+                                               @onchange="@(() => calculationOptions.BreakersText = textThreePhase)" />
                                         @textThreePhase
                                     </label>
                                 </td>
@@ -91,7 +91,7 @@
                 </td>
             </tr>
         }
-        else if (ViewModel.CalculationOptions.MeterType == "Drugo")
+        else if (calculationOptions.MeterType == "Drugo")
         {
             <tr>
                 <td align="right">
@@ -100,7 +100,7 @@
                 <td>
                     <MultiValueRadioButtonComponent 
                         VerticalOptions="true"
-                        @bind-Value="ViewModel.CalculationOptions.ConnectionType"
+                        @bind-Value="calculationOptions.ConnectionType"
                         Options="CalculationOptions.OldPriceList.Keys" />
                 </td>
             </tr>
@@ -110,8 +110,8 @@
                 </td>
                 <td>
                     <MultiValueRadioButtonComponent 
-                        @bind-Value="ViewModel.CalculationOptions.VrstaOdjema"
-                        Options="CalculationOptions.OldPriceList[ViewModel.CalculationOptions.ConnectionType].Keys" />
+                        @bind-Value="calculationOptions.VrstaOdjema"
+                        Options="CalculationOptions.OldPriceList[calculationOptions.ConnectionType].Keys" />
                 </td>
             </tr>
             <tr>
@@ -119,7 +119,7 @@
                     <span>Obračunska moč v kW:</span>
                 </td>
                 <td>
-                    <InputNumber style="max-width:100px" class="m-1" @bind-Value="ViewModel.CalculationOptions.ObracunskaMoc" />
+                    <InputNumber style="max-width:100px" class="m-1" @bind-Value="calculationOptions.ObracunskaMoc" />
                 </td>
             </tr>
         }
@@ -131,9 +131,9 @@
 @code {
     private bool ValidateSettings()
     {
-        if (ViewModel.CalculationOptions.MeterType == "Drugo")
+        if (calculationOptions.MeterType == "Drugo")
         {
-            if (ViewModel.CalculationOptions.ObracunskaMoc <= 0)
+            if (calculationOptions.ObracunskaMoc <= 0)
             {
                 toastService.ShowError("Vnesite obračunsko moč");
                 return false;
@@ -141,18 +141,32 @@
         }
         else
         {
-            if (string.IsNullOrEmpty(ViewModel.CalculationOptions.BreakersText))
+            if (string.IsNullOrEmpty(calculationOptions.BreakersText))
             {
                 toastService.ShowError("Izberite moč varovalk");
                 return false;
             }
         }
 
-        if (!ViewModel.EnteredCalculatorOnce)
+        if (!ViewModel.FocusedCalculationOptions.EnteredCalculatorOnce)
         {
-            ViewModel.CalculationOptions.AgreedMaxPowerBlocks.ResetToMinimal();
+            ViewModel.LeftCalculationOptions.AgreedMaxPowerBlocks.ResetToMinimal();
+            ViewModel.RightCalculationOptions.AgreedMaxPowerBlocks.ResetToMinimal();
         }
 
         return true;
+    }
+
+    [Parameter]
+    public bool IsLeftSide { get; set; }
+
+    private CalculationOptions calculationOptions;
+    protected override void OnInitialized()
+    {
+        if (IsLeftSide)
+            calculationOptions = ViewModel.LeftCalculationOptions;
+        else
+            calculationOptions = ViewModel.RightCalculationOptions;
+        base.OnInitialized();
     }
 }

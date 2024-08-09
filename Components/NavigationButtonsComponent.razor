@@ -1,7 +1,7 @@
 ﻿@using Omreznina.Logic
 @inject ViewModel ViewModel
 <div>
-    @if (!ViewModel.EnteredCalculatorOnce)
+    @if (!ViewModel.FocusedCalculationOptions.EnteredCalculatorOnce)
     {
         <button onclick="@BackButton" class="btn m-2 btn-secondary">Nazaj</button>
     }
@@ -23,5 +23,5 @@
         }
         ViewModel.NextPage();
     }
-    private string NextButtonText { get => ViewModel.EnteredCalculatorOnce ? "Potrdi" : "Naprej"; }
+    private string NextButtonText { get => ViewModel.FocusedCalculationOptions.EnteredCalculatorOnce ? "Potrdi" : "Naprej"; }
 }

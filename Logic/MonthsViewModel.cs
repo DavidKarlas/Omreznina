@@ -17,12 +17,14 @@ namespace Omreznina.Logic
     public class MonthsViewModel
     {
         private readonly ObservableCollection<string> months = new();
-        private readonly ObservableCollection<decimal> oldFixedPrice = new();
-        private readonly ObservableCollection<decimal> oldEnergyTransportPrice = new();
-        private readonly ObservableCollection<decimal> energyPrice = new();
-        private readonly ObservableCollection<decimal> agreedPowerPrice = new();
-        private readonly ObservableCollection<decimal> energyTransferPrice = new();
-        private readonly ObservableCollection<decimal> overdraftPrice = new();
+        private readonly ObservableCollection<decimal> leftEnergyPrice = new();
+        private readonly ObservableCollection<decimal> leftAgreedPowerPrice = new();
+        private readonly ObservableCollection<decimal> leftEnergyTransferPrice = new();
+        private readonly ObservableCollection<decimal> leftOverdraftPrice = new();
+        private readonly ObservableCollection<decimal> rightEnergyPrice = new();
+        private readonly ObservableCollection<decimal> rightAgreedPowerPrice = new();
+        private readonly ObservableCollection<decimal> rightEnergyTransferPrice = new();
+        private readonly ObservableCollection<decimal> rightOverdraftPrice = new();
         private readonly ObservableCollection<decimal> zeros = new();
         private readonly ObservableCollection<decimal> selected = new();
 
@@ -63,9 +65,10 @@ namespace Omreznina.Logic
                         MaxBarWidth=int.MaxValue,
                         IsVisibleAtLegend = false
                     },
-                    CreateStackedColumn("Star obračun: Omrež. Moč", 0, UIHelper.AgreedPowerColor, oldFixedPrice, true),
-                    CreateStackedColumn("Star obračun: Omrež. Poraba", 0, UIHelper.EnergyTransferColor, oldEnergyTransportPrice, true),
-                    CreateStackedColumn("Energija", 0, UIHelper.EnergyColor, energyPrice, true),
+                    CreateStackedColumn("Omrež. moč", 0, UIHelper.AgreedPowerColor, leftAgreedPowerPrice),
+                    CreateStackedColumn("Omrež. poraba", 0, UIHelper.EnergyTransferColor, leftEnergyTransferPrice),
+                    CreateStackedColumn("Energija", 0, UIHelper.EnergyColor, leftEnergyPrice),
+                    CreateStackedColumn("Prekoračitev", 0, UIHelper.OverdraftColor, leftOverdraftPrice),
                     new StackedColumnSeries<decimal>
                     {
                         IsVisibleAtLegend = false,
@@ -80,10 +83,10 @@ namespace Omreznina.Logic
                         YToolTipLabelFormatter = point => ((decimal)point.StackedValue.Total).ToEuro(),
                         MaxBarWidth = 55
                     },
-                    CreateStackedColumn("Omrež. moč", 1, UIHelper.AgreedPowerColor, agreedPowerPrice),
-                    CreateStackedColumn("Omrež. poraba", 1, UIHelper.EnergyTransferColor, energyTransferPrice),
-                    CreateStackedColumn("Energija", 1, UIHelper.EnergyColor, energyPrice),
-                    CreateStackedColumn("Prekoračitev", 1, UIHelper.OverdraftColor, overdraftPrice),
+                    CreateStackedColumn("Omrež. moč", 1, UIHelper.AgreedPowerColor, rightAgreedPowerPrice, true),
+                    CreateStackedColumn("Omrež. poraba", 1, UIHelper.EnergyTransferColor, rightEnergyTransferPrice, true),
+                    CreateStackedColumn("Energija", 1, UIHelper.EnergyColor, rightEnergyPrice, true),
+                    CreateStackedColumn("Prekoračitev", 1, UIHelper.OverdraftColor, rightOverdraftPrice, true),
                     new StackedColumnSeries<decimal>
                     {
                         IsVisibleAtLegend = false,
@@ -139,18 +142,18 @@ namespace Omreznina.Logic
             }
         }
 
-        public void Update(OmrezninaReport mainReport)
+        public void Update(OmrezninaReport leftReport, OmrezninaReport rightReport)
         {
-            var maxY = (double)mainReport.MonthlyReports.Max(x => Math.Max(x.EnergyPrice + x.OldFixedPrice + x.OldEnergyTransferPrice, x.EnergyPrice + x.FixedPowerPriceIfNo15Minute + x.AgreedPowerPrice + x.EnergyTransferPrice + x.OverdraftPowerPrice));
+            var maxY = (double)leftReport.MonthlyReports.Concat(rightReport.MonthlyReports).Max(x => x.TotalPrice);
             var roundedMaxY = Math.Floor(maxY / 50.0) * 50.0 + 65.0;
             if (YAxis[0].MaxLimit != roundedMaxY)
             {
                 YAxis[0].MaxLimit = roundedMaxY;
             }
-            months.SyncCollections(mainReport.MonthlyReports.Select(x => UIHelper.MonthConverter(x.Month.Month, true)).ToArray());
+            months.SyncCollections(rightReport.MonthlyReports.Select(x => UIHelper.MonthConverter(x.Month.Month, true)).ToArray());
             if (!selectMonth.HasValue || selectMonth >= months.Count)
             {
-                var indexOfFirstMonthWithOverdraft = Array.IndexOf(mainReport.MonthlyReports, mainReport.MonthlyReports.FirstOrDefault(m => m.OverdraftPowerPrice > 0));
+                var indexOfFirstMonthWithOverdraft = Array.IndexOf(rightReport.MonthlyReports, rightReport.MonthlyReports.FirstOrDefault(m => m.OverdraftPowerPrice > 0));
                 if (indexOfFirstMonthWithOverdraft == -1)
                     indexOfFirstMonthWithOverdraft = 0;
                 SelectMonth = indexOfFirstMonthWithOverdraft;
@@ -159,28 +162,24 @@ namespace Omreznina.Logic
             {
                 SelectMonth = SelectMonth;
             }
-            oldFixedPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldFixedPrice).ToArray());
-            oldEnergyTransportPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OldEnergyTransferPrice).ToArray());
-            if(!mainReport.CalculationOptions.Has15MinuteData)
+            if (!leftReport.CalculationOptions.Has15MinuteData)
             {
-                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
+                leftAgreedPowerPrice.SyncCollections(leftReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
+                rightAgreedPowerPrice.SyncCollections(rightReport.MonthlyReports.Select(m => m.FixedPowerPriceIfNo15Minute).ToArray());
             }
             else
             {
-                agreedPowerPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
+                leftAgreedPowerPrice.SyncCollections(leftReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
+                rightAgreedPowerPrice.SyncCollections(rightReport.MonthlyReports.Select(m => m.AgreedPowerPrice).ToArray());
             }
-            energyTransferPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyTransferPrice).ToArray());
-            energyPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
-            if (mainReport.CalculationOptions.IncludeEnergyPrice)
-            {
-                Series[3].IsVisibleAtLegend = true;
-            }
-            else
-            {
-                Series[3].IsVisibleAtLegend = false;
-            }
-            overdraftPrice.SyncCollections(mainReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());
-            zeros.SyncCollections(new decimal[mainReport.MonthlyReports.Length]);
+            leftEnergyTransferPrice.SyncCollections(leftReport.MonthlyReports.Select(m => m.EnergyTransferPrice).ToArray());
+            leftEnergyPrice.SyncCollections(leftReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
+            leftOverdraftPrice.SyncCollections(leftReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());
+
+            rightEnergyTransferPrice.SyncCollections(rightReport.MonthlyReports.Select(m => m.EnergyTransferPrice).ToArray());
+            rightEnergyPrice.SyncCollections(rightReport.MonthlyReports.Select(m => m.EnergyPrice).ToArray());
+            rightOverdraftPrice.SyncCollections(rightReport.MonthlyReports.Select(m => m.OverdraftPowerPrice).ToArray());
+            zeros.SyncCollections(new decimal[leftReport.MonthlyReports.Length]);
         }
     }
 }

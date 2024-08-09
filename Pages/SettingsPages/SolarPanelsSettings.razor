@@ -1,47 +1,60 @@
 ﻿@using Omreznina.Components
+@using Omreznina.Client.Logic
 @using Omreznina.Logic
 @inject ViewModel ViewModel
 <div class="d-flex flex-column mt-3 justify-content-center align-items-center">
     <h1>Sončna elektrarna</h1>
     <table cellpadding="3">
-        <tr>
+@*         <tr>
             <td align="right">
-                <span>Ali imate sončno elektrarno:</span>
+                <span>Ali želite dodati sončno elektrarno?</span>
             </td>
             <td>
-                <MultiValueRadioButtonComponent @bind-Value="ViewModel.CalculationOptions.SolarPowerPlant"
-                                                Options="Omreznina.Client.Logic.CalculationOptions.SolarPowerPlantOptions" />
+                <YesNoRadioButtonComponent @bind-Value="calculationOptions.SolarPowerPlant" />
             </td>
-        </tr>
-        @if (ViewModel.CalculationOptions.SolarPowerPlant == "Imam")
+        </tr> *@
+        @if (calculationOptions.SolarPowerPlant)
         {
             <tr>
                 <td align="right">
-                    <Omreznina.Shared.Tooltip2 Text="Net-Metering:">Ali ste dobili soglasnje za sončno elektrarno pred 1.1.2024?</Omreznina.Shared.Tooltip2>
+                    <span>Velikost sončne elektrarne v kWp:</span>
                 </td>
                 <td>
-                    <YesNoRadioButtonComponent NoText="Nimam"
-                                               YesText="Imam"
-                                               @bind-Value="ViewModel.CalculationOptions.NetMetering" />
+                    <InputNumber step="1" @bind-Value="@calculationOptions.SolarPowerPlantPower" style="width: 60px;" />
                 </td>
             </tr>
+            <tr>
+                <td align="right">
+                    <span>Ali želite dodati tudi baterije?</span>
+                </td>
+                <td>
+                    <YesNoRadioButtonComponent @bind-Value="calculationOptions.Batteries" />
+                </td>
+            </tr>
+            @if (calculationOptions.Batteries)
+            {
+
+                <tr>
+                    <td align="right">
+                        <span>Velikost baterij v kWh:</span>
+                    </td>
+                    <td>
+                        <InputNumber step="1" @bind-Value="@calculationOptions.BatteriesCapacityInKWh" style="width: 60px;" />
+                    </td>
+                </tr>
+            }
         }
     </table>
-    @if (ViewModel.CalculationOptions.SolarPowerPlant == "Želel bi izračun")
-    {
-        <span>Žal je simulacija za izračun nove sončne elektrarne še v razvoju.</span>
-    }
-    <NavigationButtonsComponent ValidateNextButton="ValidateSettings" />
+    <NavigationButtonsComponent />
 </div>
-
-
 @code {
-    private bool ValidateSettings()
+    [Parameter]
+    public bool IsLeftSide { get; set; }
+
+    private CalculationOptions calculationOptions;
+    protected override void OnInitialized()
     {
-        if (ViewModel.CalculationOptions.SolarPowerPlant == "Želel bi izračun")
-        {
-            return false;
-        }
-        return true;
+        calculationOptions = ViewModel.RightCalculationOptions;
+        base.OnInitialized();
     }
 }
